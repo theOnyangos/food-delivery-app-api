@@ -43,8 +43,13 @@ jobs:
             - name: Build assets
               run: npm run build
 
-            - name: Run Feature and Unit tests
-              run: php artisan test --without-tty tests/Feature tests/Unit
+            - name: Run tests
+              run: |
+                  if [ -d tests/Unit ] && find tests/Unit -type f -name '*Test.php' | grep -q .; then
+                    php artisan test --without-tty tests/Feature tests/Unit
+                  else
+                    php artisan test --without-tty tests/Feature
+                  fi
 
     deploy:
         name: Deploy to VPS
