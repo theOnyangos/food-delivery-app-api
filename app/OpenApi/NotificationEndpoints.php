@@ -5,15 +5,122 @@ namespace App\OpenApi;
 use OpenApi\Attributes as OA;
 
 #[OA\Get(
-    path: '/api/notifications',
-    operationId: 'listNotifications',
+    path: '/api/notifications/stream',
+    operationId: 'notificationStream',
     tags: ['Notifications'],
-    summary: 'List notifications for the authenticated user',
+    summary: 'Server-Sent Events stream for real-time notifications',
+    description: 'Opens a persistent SSE connection that pushes unread notifications as `event: notification` messages and heartbeat comments every 5 seconds. Authenticate by passing a Sanctum token as a Bearer header or via the `api_token` query parameter.',
+    parameters: [
+        new OA\Parameter(
+            name: 'api_token',
+            in: 'query',
+            required: false,
+            description: 'Sanctum personal access token (alternative to Authorization header for SSE clients)',
+            schema: new OA\Schema(type: 'string')
+        ),
+    ],
+    responses: [
+        new OA\Response(
+            response: 200,
+            description: 'SSE stream opened successfully',
+            content: new OA\MediaType(
+                mediaType: 'text/event-stream',
+                schema: new OA\Schema(type: 'string', example: "event: notification\ndata: {\"success\":true,\"data\":[],\"count\":1,\"timestamp\":\"2026-03-15 12:00:00\"}\n\n")
+            )
+        ),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 403, description: 'Forbidden'),
+    ]
+)]
+#[OA\Get(
+    path: '/api/notifications/datatable',
+    operationId: 'listNotificationsDatatable',
+    tags: ['Notifications'],
+    summary: 'Yajra DataTables list of notifications for the authenticated user',
     security: [['sanctum' => []]],
+    parameters: [
+        new OA\Parameter(name: 'draw', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+        new OA\Parameter(name: 'start', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+        new OA\Parameter(name: 'length', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+        new OA\Parameter(name: 'search[value]', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+        new OA\Parameter(name: 'unread_only', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+    ],
     responses: [
         new OA\Response(response: 200, description: 'Notifications fetched successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
         new OA\Response(response: 403, description: 'Forbidden'),
+    ]
+)]
+#[OA\Get(
+    path: '/api/notifications/preferences',
+    operationId: 'getNotificationPreferences',
+    tags: ['Notifications'],
+    summary: 'Get notification preferences for authenticated user',
+    security: [['sanctum' => []]],
+    responses: [
+        new OA\Response(response: 200, description: 'Notification preferences fetched successfully'),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+    ]
+)]
+#[OA\Put(
+    path: '/api/notifications/preferences',
+    operationId: 'updateNotificationPreferences',
+    tags: ['Notifications'],
+    summary: 'Update notification preferences for authenticated user',
+    description: 'Supports enabling/disabling all notifications, selecting notification types, toggling email notifications, and toggling SMS notifications. When SMS notifications are enabled, a valid phone number is required in E.164-like format (e.g. +254712345678).',
+    security: [['sanctum' => []]],
+    requestBody: new OA\RequestBody(
+        required: false,
+        content: new OA\JsonContent(
+            type: 'object',
+            properties: [
+                new OA\Property(property: 'notifications_enabled', type: 'boolean', example: true),
+                new OA\Property(
+                    property: 'notification_types',
+                    type: 'array',
+                    items: new OA\Items(type: 'string'),
+                    example: ['system', 'security', 'transaction']
+                ),
+                new OA\Property(property: 'email_notifications_enabled', type: 'boolean', example: true),
+                new OA\Property(property: 'sms_notifications_enabled', type: 'boolean', example: false),
+                new OA\Property(property: 'sms_phone_number', type: 'string', nullable: true, example: '+254712345678'),
+            ]
+        )
+    ),
+    responses: [
+        new OA\Response(response: 200, description: 'Notification preferences updated successfully'),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 422, description: 'Validation failed'),
+    ]
+)]
+#[OA\Patch(
+    path: '/api/notifications/preferences',
+    operationId: 'patchNotificationPreferences',
+    tags: ['Notifications'],
+    summary: 'Partially update notification preferences for authenticated user',
+    security: [['sanctum' => []]],
+    requestBody: new OA\RequestBody(
+        required: false,
+        content: new OA\JsonContent(
+            type: 'object',
+            properties: [
+                new OA\Property(property: 'notifications_enabled', type: 'boolean', example: true),
+                new OA\Property(
+                    property: 'notification_types',
+                    type: 'array',
+                    items: new OA\Items(type: 'string'),
+                    example: ['system', 'security', 'transaction']
+                ),
+                new OA\Property(property: 'email_notifications_enabled', type: 'boolean', example: true),
+                new OA\Property(property: 'sms_notifications_enabled', type: 'boolean', example: false),
+                new OA\Property(property: 'sms_phone_number', type: 'string', nullable: true, example: '+254712345678'),
+            ]
+        )
+    ),
+    responses: [
+        new OA\Response(response: 200, description: 'Notification preferences updated successfully'),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 422, description: 'Validation failed'),
     ]
 )]
 #[OA\Get(

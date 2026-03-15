@@ -59,6 +59,12 @@ Route::middleware(['auth:sanctum', 'permission:manage roles'])->group(function (
 
 Route::get('/notifications/stream', [NotificationController::class, 'index']);
 
+Route::middleware('auth:sanctum')->group(function (): void {
+    Route::get('/notifications/preferences', [NotificationController::class, 'getPreferences']);
+    Route::put('/notifications/preferences', [NotificationController::class, 'updatePreferences']);
+    Route::patch('/notifications/preferences', [NotificationController::class, 'updatePreferences']);
+});
+
 Route::middleware(['auth:sanctum', 'role_or_permission:Super Admin|Admin|Partner|view notifications|manage notifications'])->group(function (): void {
     Route::get('/notifications/datatable', [NotificationController::class, 'datatable']);
     Route::get('/notifications/unread', [NotificationController::class, 'getUnreadNotifications']);

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Notification\UpdateNotificationPreferencesRequest;
 use App\Http\Resources\NotificationResource;
 use App\Models\Notification;
+use App\Models\NotificationPreference;
 use App\Models\PersonalAccessToken;
 use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
@@ -15,7 +17,73 @@ use Yajra\DataTables\Facades\DataTables;
 
 class NotificationController extends Controller
 {
+    private const DEFAULT_NOTIFICATION_TYPES = [
+        'system',
+        'security',
+        'transaction',
+        'promotional',
+    ];
+
     public function __construct(private readonly NotificationService $notificationService) {}
+
+    public function getPreferences(Request $request): JsonResponse
+    {
+        $preference = NotificationPreference::query()->firstOrCreate(
+            ['user_id' => $request->user()->id],
+            [
+                'notifications_enabled' => true,
+                'notification_types' => self::DEFAULT_NOTIFICATION_TYPES,
+                'email_notifications_enabled' => true,
+                'sms_notifications_enabled' => false,
+                'sms_phone_number' => null,
+            ]
+        );
+
+        return $this->apiSuccess($preference, 'Notification preferences fetched successfully.');
+    }
+
+    public function updatePreferences(UpdateNotificationPreferencesRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        $validated = $request->validated();
+
+        $preference = NotificationPreference::query()->firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'notifications_enabled' => true,
+                'notification_types' => self::DEFAULT_NOTIFICATION_TYPES,
+                'email_notifications_enabled' => true,
+                'sms_notifications_enabled' => false,
+                'sms_phone_number' => null,
+            ]
+        );
+
+        $smsWillBeEnabled = array_key_exists('sms_notifications_enabled', $validated)
+            ? (bool) $validated['sms_notifications_enabled']
+            : (bool) $preference->sms_notifications_enabled;
+
+        $smsPhoneNumber = array_key_exists('sms_phone_number', $validated)
+            ? ($validated['sms_phone_number'] ?: null)
+            : $preference->sms_phone_number;
+
+        if ($smsWillBeEnabled && empty($smsPhoneNumber)) {
+            return $this->apiError(
+                'A valid phone number is required when SMS notifications are enabled.',
+                422,
+                ['errors' => ['sms_phone_number' => ['A valid phone number is required when SMS notifications are enabled.']]]
+            );
+        }
+
+        $preference->fill([
+            'notifications_enabled' => $validated['notifications_enabled'] ?? $preference->notifications_enabled,
+            'notification_types' => $validated['notification_types'] ?? $preference->notification_types,
+            'email_notifications_enabled' => $validated['email_notifications_enabled'] ?? $preference->email_notifications_enabled,
+            'sms_notifications_enabled' => $smsWillBeEnabled,
+            'sms_phone_number' => $smsPhoneNumber,
+        ])->save();
+
+        return $this->apiSuccess($preference->fresh(), 'Notification preferences updated successfully.');
+    }
 
     public function index(Request $request): StreamedResponse
     {
@@ -91,7 +159,9 @@ class NotificationController extends Controller
 
         /** @var JsonResponse $response */
         $response = DataTables::eloquent($query)
-            ->setTransformer(fn (Notification $notification) => (new NotificationResource($notification))->resolve())
+            ->addColumn('title', fn (Notification $notification): string => (string) ($notification->data['title'] ?? ''))
+            ->addColumn('message', fn (Notification $notification): string => (string) ($notification->data['message'] ?? ''))
+            ->editColumn('created_at', fn (Notification $notification): ?string => $notification->created_at?->toDateTimeString())
             ->toJson();
 
         return $response;
@@ -143,18 +213,12 @@ class NotificationController extends Controller
         $notification = Notification::query()->findOrFail($notificationId);
 
         if ((string) $notification->user_id !== (string) $request->user()->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized to delete this notification.',
-            ], 403);
+            return $this->apiError('Unauthorized to delete this notification.', 403);
         }
 
         $this->notificationService->delete($notification);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Notification deleted successfully',
-        ]);
+        return $this->apiSuccess(null, 'Notification deleted successfully.');
     }
 
     public function testNotification(Request $request): JsonResponse

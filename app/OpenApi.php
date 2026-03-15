@@ -6,7 +6,7 @@ use OpenApi\Attributes as OA;
 
 #[OA\Info(
 	version: '1.0.0',
-	title: 'AMAZING SOULS API',
+	title: 'ASL API',
 	description: 'API documentation for AMAZING SOULS API'
 )]
 #[OA\SecurityScheme(

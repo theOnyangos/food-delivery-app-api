@@ -1,7 +1,7 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "AMAZING SOULS API",
+        "title": "ASL API",
         "description": "API documentation for AMAZING SOULS API",
         "version": "1.0.0"
     },
@@ -487,13 +487,95 @@
                 ]
             }
         },
-        "/api/notifications": {
+        "/api/notifications/stream": {
             "get": {
                 "tags": [
                     "Notifications"
                 ],
-                "summary": "List notifications for the authenticated user",
-                "operationId": "listNotifications",
+                "summary": "Server-Sent Events stream for real-time notifications",
+                "description": "Opens a persistent SSE connection that pushes unread notifications as `event: notification` messages and heartbeat comments every 5 seconds. Authenticate by passing a Sanctum token as a Bearer header or via the `api_token` query parameter.",
+                "operationId": "notificationStream",
+                "parameters": [
+                    {
+                        "name": "api_token",
+                        "in": "query",
+                        "description": "Sanctum personal access token (alternative to Authorization header for SSE clients)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "SSE stream opened successfully",
+                        "content": {
+                            "text/event-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "example": "event: notification\ndata: {\"success\":true,\"data\":[],\"count\":1,\"timestamp\":\"2026-03-15 12:00:00\"}\n\n"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                }
+            }
+        },
+        "/api/notifications/datatable": {
+            "get": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Yajra DataTables list of notifications for the authenticated user",
+                "operationId": "listNotificationsDatatable",
+                "parameters": [
+                    {
+                        "name": "draw",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "start",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "length",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search[value]",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "unread_only",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Notifications fetched successfully"
@@ -503,6 +585,155 @@
                     },
                     "403": {
                         "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/preferences": {
+            "get": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Get notification preferences for authenticated user",
+                "operationId": "getNotificationPreferences",
+                "responses": {
+                    "200": {
+                        "description": "Notification preferences fetched successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Update notification preferences for authenticated user",
+                "description": "Supports enabling/disabling all notifications, selecting notification types, toggling email notifications, and toggling SMS notifications. When SMS notifications are enabled, a valid phone number is required in E.164-like format (e.g. +254712345678).",
+                "operationId": "updateNotificationPreferences",
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "notifications_enabled": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "notification_types": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": [
+                                            "system",
+                                            "security",
+                                            "transaction"
+                                        ]
+                                    },
+                                    "email_notifications_enabled": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "sms_notifications_enabled": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "sms_phone_number": {
+                                        "type": "string",
+                                        "example": "+254712345678",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Notification preferences updated successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Partially update notification preferences for authenticated user",
+                "operationId": "patchNotificationPreferences",
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "notifications_enabled": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "notification_types": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": [
+                                            "system",
+                                            "security",
+                                            "transaction"
+                                        ]
+                                    },
+                                    "email_notifications_enabled": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "sms_notifications_enabled": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "sms_phone_number": {
+                                        "type": "string",
+                                        "example": "+254712345678",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Notification preferences updated successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation failed"
                     }
                 },
                 "security": [
