@@ -41,10 +41,7 @@ class UploadController extends Controller
             ],
         );
 
-        return response()->json([
-            'message' => 'Image uploaded successfully.',
-            'data' => $result,
-        ], 201);
+        return $this->apiSuccess($result, 'Image uploaded successfully.', 201);
     }
 
     public function publicAsset(Request $request): JsonResponse
@@ -77,10 +74,7 @@ class UploadController extends Controller
             ],
         );
 
-        return response()->json([
-            'message' => 'Public asset uploaded successfully.',
-            'data' => $result,
-        ], 201);
+        return $this->apiSuccess($result, 'Public asset uploaded successfully.', 201);
     }
 
     public function privateAsset(Request $request): JsonResponse
@@ -99,13 +93,10 @@ class UploadController extends Controller
             $category
         );
 
-        return response()->json([
-            'message' => 'File uploaded successfully.',
-            'data' => [
-                'id' => $result['id'],
-                'url' => $result['url'],
-            ],
-        ], 201);
+        return $this->apiSuccess([
+            'id' => $result['id'],
+            'url' => $result['url'],
+        ], 'File uploaded successfully.', 201);
     }
 
     public function serveUrl(Request $request, Media $media): JsonResponse
@@ -124,8 +115,12 @@ class UploadController extends Controller
         );
 
         return response()->json([
-            'url' => $url,
-            'expires_in_seconds' => 3600,
+            'success' => true,
+            'message' => 'URL generated successfully.',
+            'data' => [
+                'url' => $url,
+                'expires_in_seconds' => 3600,
+            ],
         ], 200, [], JSON_UNESCAPED_SLASHES);
     }
 
@@ -142,9 +137,7 @@ class UploadController extends Controller
 
         $media->delete();
 
-        return response()->json([
-            'message' => 'File deleted successfully.',
-        ], 200);
+        return $this->apiSuccess(null, 'File deleted successfully.');
     }
 
     public function destroyByPath(Request $request): JsonResponse
@@ -156,7 +149,7 @@ class UploadController extends Controller
         $pathOrUrl = (string) $request->query('path', $request->input('path', ''));
         $path = $this->extractPathFromUrlOrPath($pathOrUrl);
         if (! $path) {
-            return response()->json(['message' => 'Invalid path or URL.'], 400);
+            return $this->apiError('Invalid path or URL.');
         }
 
         $user = $request->user();
@@ -167,7 +160,7 @@ class UploadController extends Controller
             ->first();
 
         if (! $media) {
-            return response()->json(['message' => 'File not found.'], 404);
+            return $this->apiError('File not found.', 404);
         }
 
         $disk = $media->disk ?: config('filesystems.default');
@@ -177,9 +170,7 @@ class UploadController extends Controller
 
         $media->delete();
 
-        return response()->json([
-            'message' => 'File deleted successfully.',
-        ], 200);
+        return $this->apiSuccess(null, 'File deleted successfully.');
     }
 
     private function extractPathFromUrlOrPath(string $pathOrUrl): ?string
@@ -204,7 +195,7 @@ class UploadController extends Controller
         $disk = $media->disk ?: config('filesystems.default');
 
         if (! Storage::disk($disk)->exists($path)) {
-            return response()->json(['message' => 'File not found.'], 404);
+            return $this->apiError('File not found.', 404);
         }
 
         $fullPath = Storage::disk($disk)->path($path);

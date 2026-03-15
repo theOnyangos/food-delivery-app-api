@@ -33,7 +33,7 @@ use OpenApi\Attributes as OA;
     path: '/api/auth/login',
     operationId: 'loginUser',
     tags: ['Auth'],
-    summary: 'Login user',
+    summary: 'Login user (returns challenge if 2FA enabled)',
     requestBody: new OA\RequestBody(
         required: true,
         content: new OA\JsonContent(
@@ -45,9 +45,31 @@ use OpenApi\Attributes as OA;
         )
     ),
     responses: [
-        new OA\Response(response: 200, description: 'Login successful'),
+        new OA\Response(response: 200, description: 'Login successful or OTP challenge required when 2FA is enabled'),
         new OA\Response(response: 403, description: 'Email not verified'),
         new OA\Response(response: 401, description: 'Invalid credentials'),
+    ]
+)]
+#[OA\Post(
+    path: '/api/auth/verify-login-otp',
+    operationId: 'verifyLoginOtp',
+    tags: ['Auth'],
+    summary: 'Verify login OTP and complete authentication',
+    requestBody: new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ['otp_challenge_token', 'otp'],
+            properties: [
+                new OA\Property(property: 'otp_challenge_token', type: 'string', example: 'challenge-token-from-login-response'),
+                new OA\Property(property: 'otp', type: 'string', example: '123456'),
+            ]
+        )
+    ),
+    responses: [
+        new OA\Response(response: 200, description: 'OTP verified and login successful'),
+        new OA\Response(response: 422, description: 'Invalid OTP code'),
+        new OA\Response(response: 400, description: 'Invalid or expired challenge'),
+        new OA\Response(response: 429, description: 'Too many OTP attempts'),
     ]
 )]
 #[OA\Get(
@@ -167,6 +189,39 @@ use OpenApi\Attributes as OA;
     security: [['sanctum' => []]],
     responses: [
         new OA\Response(response: 200, description: 'Token is valid'),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+    ]
+)]
+#[OA\Put(
+    path: '/api/auth/two-factor',
+    operationId: 'enableOrUpdateTwoFactor',
+    tags: ['Auth'],
+    summary: 'Enable or update login OTP for two-factor authentication',
+    security: [['sanctum' => []]],
+    requestBody: new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ['otp', 'otp_confirmation'],
+            properties: [
+                new OA\Property(property: 'otp', type: 'string', example: '123456'),
+                new OA\Property(property: 'otp_confirmation', type: 'string', example: '123456'),
+            ]
+        )
+    ),
+    responses: [
+        new OA\Response(response: 200, description: 'Two-factor updated successfully'),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 422, description: 'Validation error'),
+    ]
+)]
+#[OA\Delete(
+    path: '/api/auth/two-factor',
+    operationId: 'disableTwoFactor',
+    tags: ['Auth'],
+    summary: 'Disable two-factor authentication',
+    security: [['sanctum' => []]],
+    responses: [
+        new OA\Response(response: 200, description: 'Two-factor disabled successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
     ]
 )]

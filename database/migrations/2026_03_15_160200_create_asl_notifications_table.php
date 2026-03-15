@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('asl_notifications', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('user_id')->constrained('asl_users')->cascadeOnDelete();
+            $table->foreignUuid('user_id')->constrained('asl_users')->cascadeOnDelete();
             $table->string('type');
             $table->json('data')->nullable();
             $table->boolean('is_read')->default(false);

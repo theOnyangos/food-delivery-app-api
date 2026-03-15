@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Permission;
+use App\Models\Role;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
@@ -19,6 +19,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'view dashboard',
             'manage users',
             'manage uploads',
+            'manage roles',
+            'view permissions',
+            'view users',
+            'manage user roles',
+            'view notifications',
+            'manage notifications',
         ];
 
         foreach ($permissions as $permission) {
@@ -36,8 +42,8 @@ class RolesAndPermissionsSeeder extends Seeder
         $allPermissions = Permission::query()->pluck('name')->all();
 
         $superAdmin->syncPermissions($allPermissions);
-        $admin->syncPermissions(['view dashboard', 'manage users', 'manage uploads']);
-        $partner->syncPermissions(['view dashboard', 'manage uploads']);
+        $admin->syncPermissions(['view dashboard', 'manage users', 'manage uploads', 'view notifications', 'manage notifications']);
+        $partner->syncPermissions(['view dashboard', 'manage uploads', 'view notifications', 'manage notifications']);
         $customer->syncPermissions([]);
     }
 }

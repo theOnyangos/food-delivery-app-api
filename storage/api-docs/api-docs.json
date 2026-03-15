@@ -1,8 +1,8 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "ASL API",
-        "description": "API documentation for ASL API",
+        "title": "AMAZING SOULS API",
+        "description": "API documentation for AMAZING SOULS API",
         "version": "1.0.0"
     },
     "paths": {
@@ -83,7 +83,7 @@
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Login user",
+                "summary": "Login user (returns challenge if 2FA enabled)",
                 "operationId": "loginUser",
                 "requestBody": {
                     "required": true,
@@ -113,13 +113,60 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Login successful"
+                        "description": "Login successful or OTP challenge required when 2FA is enabled"
                     },
                     "403": {
                         "description": "Email not verified"
                     },
                     "401": {
                         "description": "Invalid credentials"
+                    }
+                }
+            }
+        },
+        "/api/auth/verify-login-otp": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Verify login OTP and complete authentication",
+                "operationId": "verifyLoginOtp",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "otp_challenge_token",
+                                    "otp"
+                                ],
+                                "properties": {
+                                    "otp_challenge_token": {
+                                        "type": "string",
+                                        "example": "challenge-token-from-login-response"
+                                    },
+                                    "otp": {
+                                        "type": "string",
+                                        "example": "123456"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OTP verified and login successful"
+                    },
+                    "422": {
+                        "description": "Invalid OTP code"
+                    },
+                    "400": {
+                        "description": "Invalid or expired challenge"
+                    },
+                    "429": {
+                        "description": "Too many OTP attempts"
                     }
                 }
             }
@@ -371,6 +418,267 @@
                 ]
             }
         },
+        "/api/auth/two-factor": {
+            "put": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Enable or update login OTP for two-factor authentication",
+                "operationId": "enableOrUpdateTwoFactor",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "otp",
+                                    "otp_confirmation"
+                                ],
+                                "properties": {
+                                    "otp": {
+                                        "type": "string",
+                                        "example": "123456"
+                                    },
+                                    "otp_confirmation": {
+                                        "type": "string",
+                                        "example": "123456"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Two-factor updated successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Disable two-factor authentication",
+                "operationId": "disableTwoFactor",
+                "responses": {
+                    "200": {
+                        "description": "Two-factor disabled successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications": {
+            "get": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "List notifications for the authenticated user",
+                "operationId": "listNotifications",
+                "responses": {
+                    "200": {
+                        "description": "Notifications fetched successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/unread": {
+            "get": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "List unread notifications",
+                "operationId": "listUnreadNotifications",
+                "responses": {
+                    "200": {
+                        "description": "Unread notifications fetched successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/unread-count": {
+            "get": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Get unread notifications count",
+                "operationId": "countUnreadNotifications",
+                "responses": {
+                    "200": {
+                        "description": "Unread count fetched successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/mark-all-read": {
+            "post": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Mark all notifications as read",
+                "operationId": "markAllNotificationsRead",
+                "responses": {
+                    "200": {
+                        "description": "Notifications marked as read"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/{notificationId}/read": {
+            "post": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Mark a notification as read",
+                "operationId": "markNotificationRead",
+                "parameters": [
+                    {
+                        "name": "notificationId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notification marked as read"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/{notificationId}": {
+            "delete": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Delete a notification",
+                "operationId": "deleteNotification",
+                "parameters": [
+                    {
+                        "name": "notificationId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notification deleted successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/test": {
+            "post": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Create a test notification",
+                "operationId": "testNotification",
+                "responses": {
+                    "200": {
+                        "description": "Test notification created successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/roles/datatables": {
+            "get": {
+                "tags": [
+                    "Role Management"
+                ],
+                "summary": "List roles in DataTables format",
+                "operationId": "listRolesDataTables",
+                "responses": {
+                    "200": {
+                        "description": "Roles fetched successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/admin/roles": {
             "get": {
                 "tags": [
@@ -394,22 +702,109 @@
                         "sanctum": []
                     }
                 ]
-            }
-        },
-        "/api/admin/users/{user}/role": {
-            "patch": {
+            },
+            "post": {
                 "tags": [
                     "Role Management"
                 ],
-                "summary": "Assign a role to a user",
-                "operationId": "assignUserRole",
+                "summary": "Create a role",
+                "operationId": "createRole",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Auditor"
+                                    },
+                                    "guard_name": {
+                                        "type": "string",
+                                        "example": "web"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Role created successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/roles/{role}": {
+            "get": {
+                "tags": [
+                    "Role Management"
+                ],
+                "summary": "Show a role",
+                "operationId": "showRole",
                 "parameters": [
                     {
-                        "name": "user",
+                        "name": "role",
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Role fetched successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Role not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Role Management"
+                ],
+                "summary": "Update a role",
+                "operationId": "updateRole",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
                         }
                     }
                 ],
@@ -419,12 +814,16 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "role"
+                                    "name"
                                 ],
                                 "properties": {
-                                    "role": {
+                                    "name": {
                                         "type": "string",
                                         "example": "Admin"
+                                    },
+                                    "guard_name": {
+                                        "type": "string",
+                                        "example": "web"
                                     }
                                 },
                                 "type": "object"
@@ -434,7 +833,219 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Role assigned successfully"
+                        "description": "Role updated successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Role Management"
+                ],
+                "summary": "Delete a role",
+                "operationId": "deleteRole",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Role deleted successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/roles/{role}/permissions": {
+            "put": {
+                "tags": [
+                    "Role Management"
+                ],
+                "summary": "Sync role permissions",
+                "operationId": "syncRolePermissions",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "permission_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    },
+                                    "permission_names": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Permissions synced successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/permissions": {
+            "get": {
+                "tags": [
+                    "Role Management"
+                ],
+                "summary": "List permissions",
+                "operationId": "listPermissions",
+                "responses": {
+                    "200": {
+                        "description": "Permissions fetched successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/users": {
+            "get": {
+                "tags": [
+                    "Role Management"
+                ],
+                "summary": "List users with roles",
+                "operationId": "listUsersForRoles",
+                "responses": {
+                    "200": {
+                        "description": "Users fetched successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/users/{user}/roles": {
+            "put": {
+                "tags": [
+                    "Role Management"
+                ],
+                "summary": "Update a user roles",
+                "operationId": "updateUserRoles",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "role_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    },
+                                    "role_names": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User roles updated successfully"
                     },
                     "401": {
                         "description": "Unauthenticated"
@@ -786,10 +1397,10 @@
     "components": {
         "securitySchemes": {
             "sanctum": {
-                "type": "apiKey",
-                "description": "Enter token as: Bearer {token}",
-                "name": "Authorization",
-                "in": "header"
+                "type": "http",
+                "description": "Use a Sanctum personal access token. Swagger will send it as Authorization: Bearer {token}.",
+                "bearerFormat": "Sanctum",
+                "scheme": "bearer"
             }
         }
     },
@@ -797,6 +1408,10 @@
         {
             "name": "Auth",
             "description": "Auth"
+        },
+        {
+            "name": "Notifications",
+            "description": "Notifications"
         },
         {
             "name": "Role Management",

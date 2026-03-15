@@ -7,29 +7,37 @@ use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
+use App\Http\Requests\Auth\UpdateTwoFactorRequest;
+use App\Http\Requests\Auth\VerifyLoginOtpRequest;
 use App\Services\AuthService;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class AuthController extends Controller
 {
+    private const OTP_MAX_ATTEMPTS = 5;
+
+    private const OTP_DECAY_SECONDS = 300;
+
     public function __construct(private readonly AuthService $authService) {}
 
     public function register(RegisterRequest $request): JsonResponse
     {
         $result = $this->authService->register($request->validated());
 
-        return response()->json([
-            'message' => 'Registration successful.',
+        return $this->apiSuccess([
             'user' => $result['user'],
             'token' => $result['token'],
             'token_type' => 'Bearer',
-        ], 201);
+            'two_factor_enabled' => false,
+            'roles' => $result['roles'] ?? [],
+        ], 'Registration successful.', 201);
     }
 
     public function login(LoginRequest $request): JsonResponse
@@ -37,7 +45,7 @@ class AuthController extends Controller
         $result = $this->authService->login($request->validated());
 
         if ($result === null) {
-            return response()->json(['message' => 'Invalid credentials.'], 401);
+            return $this->apiError('Invalid credentials.', 401);
         }
 
         if (isset($result['blocked']) && $result['blocked']) {
@@ -46,41 +54,133 @@ class AuthController extends Controller
                 default => 'Access denied.',
             };
 
-            return response()->json([
-                'message' => $message,
-                'reason' => $result['reason'],
-            ], 403);
+            return $this->apiError($message, 403, ['reason' => $result['reason']]);
         }
 
-        return response()->json([
-            'message' => 'Login successful.',
-            'user' => $result['user'],
+        if (isset($result['requires_two_factor']) && $result['requires_two_factor']) {
+            return $this->apiSuccess([
+                'requires_two_factor' => true,
+                'two_factor_enabled' => true,
+                'otp_challenge_token' => $result['otp_challenge_token'],
+                'otp_expires_in' => $result['otp_expires_in'],
+                'roles' => $result['roles'] ?? [],
+                'user' => [
+                    'id' => $result['user']->id,
+                    'email' => $result['user']->email,
+                    'full_name' => $result['user']->full_name,
+                ],
+            ], 'OTP verification required.');
+        }
+
+        return $this->apiSuccess([
+            'user' => $result['user']->withoutRelations(),
             'token' => $result['token'],
             'token_type' => 'Bearer',
-        ]);
+            'two_factor_enabled' => (bool) ($result['two_factor_enabled'] ?? false),
+            'roles' => $result['roles'] ?? [],
+        ], 'Login successful.');
+    }
+
+    public function verifyLoginOtp(VerifyLoginOtpRequest $request): JsonResponse
+    {
+        $rateLimitKey = sprintf(
+            'auth:verify-login-otp:%s:%s',
+            $request->input('otp_challenge_token'),
+            (string) $request->ip()
+        );
+
+        if (RateLimiter::tooManyAttempts($rateLimitKey, self::OTP_MAX_ATTEMPTS)) {
+            return $this->apiError('Too many OTP attempts. Please wait before trying again.', 429, [
+                'retry_after' => RateLimiter::availableIn($rateLimitKey),
+            ]);
+        }
+
+        $result = $this->authService->verifyLoginOtp($request->validated());
+
+        if ($result === null) {
+            RateLimiter::hit($rateLimitKey, self::OTP_DECAY_SECONDS);
+
+            return $this->apiError('OTP verification failed.');
+        }
+
+        if (isset($result['blocked']) && $result['blocked']) {
+            $status = $result['reason'] === 'invalid_otp' ? 422 : 400;
+            $message = match ($result['reason']) {
+                'invalid_otp' => 'Invalid OTP code.',
+                'otp_challenge_expired' => 'OTP challenge has expired. Please login again.',
+                'otp_challenge_invalid' => 'Invalid OTP challenge. Please login again.',
+                'two_factor_not_enabled' => 'Two-factor authentication is not enabled for this user.',
+                default => 'OTP verification failed.',
+            };
+
+            RateLimiter::hit($rateLimitKey, self::OTP_DECAY_SECONDS);
+
+            return $this->apiError($message, $status, ['reason' => $result['reason']]);
+        }
+
+        RateLimiter::clear($rateLimitKey);
+
+        return $this->apiSuccess([
+            'user' => $result['user']->withoutRelations(),
+            'token' => $result['token'],
+            'token_type' => 'Bearer',
+            'two_factor_enabled' => true,
+            'roles' => $result['roles'] ?? [],
+        ], 'Login successful.');
     }
 
     public function logout(Request $request): JsonResponse
     {
         $this->authService->logout($request->user());
 
-        return response()->json(['message' => 'Logged out successfully.']);
+        return $this->apiSuccess(null, 'Logged out successfully.');
     }
 
     public function user(Request $request): JsonResponse
     {
-        return response()->json([
-            'user' => $request->user(),
-        ]);
+        $user = $request->user();
+
+        return $this->apiSuccess([
+            'user' => $user,
+            'two_factor_enabled' => $user->hasTwoFactorEnabled(),
+            'roles' => $user->getRoleNames()->values(),
+        ], 'User fetched successfully.');
     }
 
     public function verifyToken(Request $request): JsonResponse
     {
-        return response()->json([
+        $user = $request->user();
+
+        return $this->apiSuccess([
             'valid' => true,
-            'message' => 'Token is valid.',
-            'user_id' => $request->user()->id,
-        ]);
+            'user_id' => $user->id,
+            'two_factor_enabled' => $user->hasTwoFactorEnabled(),
+            'roles' => $user->getRoleNames()->values(),
+        ], 'Token is valid.');
+    }
+
+    public function enableOrUpdateTwoFactor(UpdateTwoFactorRequest $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $this->authService->enableOrUpdateTwoFactor($user, $request->validated('otp'));
+
+        return $this->apiSuccess([
+            'two_factor_enabled' => true,
+            'roles' => $user->getRoleNames()->values(),
+        ], 'Two-factor authentication has been enabled/updated.');
+    }
+
+    public function disableTwoFactor(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $this->authService->disableTwoFactor($user);
+
+        return $this->apiSuccess([
+            'two_factor_enabled' => false,
+            'roles' => $user->getRoleNames()->values(),
+        ], 'Two-factor authentication has been disabled.');
     }
 
     /**
@@ -91,23 +191,14 @@ class AuthController extends Controller
         $token = $request->query('token') ?? $request->input('token');
 
         if (empty($token)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Verification token is required.',
-            ], 422);
+            return $this->apiError('Verification token is required.', 422);
         }
 
         if (! $this->authService->verifyEmail($token)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid or expired verification token. Please request a new verification email.',
-            ], 400);
+            return $this->apiError('Invalid or expired verification token. Please request a new verification email.');
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Your email has been verified successfully.',
-        ]);
+        return $this->apiSuccess(null, 'Your email has been verified successfully.');
     }
 
     /**
@@ -122,7 +213,7 @@ class AuthController extends Controller
             $message = 'Invalid or expired verification token. Please request a new verification email.';
 
             if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => $message], 400);
+                return $this->apiError($message);
             }
 
             return view('auth.verify-email-result', [
@@ -135,7 +226,7 @@ class AuthController extends Controller
         $message = 'Your email has been verified successfully.';
 
         if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'message' => $message]);
+            return $this->apiSuccess(null, $message);
         }
 
         return view('auth.verify-email-result', [
@@ -149,9 +240,7 @@ class AuthController extends Controller
     {
         Password::sendResetLink($request->validated());
 
-        return response()->json([
-            'message' => 'If an account exists with that email, we have sent a password reset link.',
-        ]);
+        return $this->apiSuccess(null, 'If an account exists with that email, we have sent a password reset link.');
     }
 
     public function resetPassword(ResetPasswordRequest $request): JsonResponse
@@ -169,13 +258,9 @@ class AuthController extends Controller
         );
 
         if ($status !== Password::PASSWORD_RESET) {
-            return response()->json([
-                'message' => __($status),
-            ], 400);
+            return $this->apiError(__($status));
         }
 
-        return response()->json([
-            'message' => 'Your password has been reset successfully.',
-        ]);
+        return $this->apiSuccess(null, 'Your password has been reset successfully.');
     }
 }

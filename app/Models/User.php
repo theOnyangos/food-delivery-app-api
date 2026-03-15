@@ -4,7 +4,9 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -13,11 +15,13 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, HasRoles, Notifiable;
+    use HasApiTokens, HasFactory, HasRoles, HasUuids, Notifiable;
 
     protected $table = 'asl_users';
 
-    protected $appends = ['name'];
+    public $incrementing = false;
+
+    protected $keyType = 'string';
 
     /**
      * The attributes that are mass assignable.
@@ -25,7 +29,6 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
         'first_name',
         'middle_name',
         'last_name',
@@ -59,22 +62,24 @@ class User extends Authenticatable
         ];
     }
 
-    public function getNameAttribute(): string
+    public function getFullNameAttribute(): string
     {
-        $first = (string) ($this->attributes['first_name'] ?? '');
-        $middle = (string) ($this->attributes['middle_name'] ?? '');
-        $last = (string) ($this->attributes['last_name'] ?? '');
-        $composed = trim($first.' '.$middle.' '.$last);
+        $parts = [
+            trim((string) ($this->attributes['first_name'] ?? '')),
+            trim((string) ($this->attributes['middle_name'] ?? '')),
+            trim((string) ($this->attributes['last_name'] ?? '')),
+        ];
 
-        if ($composed !== '') {
-            return $composed;
-        }
-
-        return (string) ($this->attributes['name'] ?? '');
+        return implode(' ', array_values(array_filter($parts, fn (string $part): bool => $part !== '')));
     }
 
     public function hasTwoFactorEnabled(): bool
     {
         return ! empty($this->two_factor_secret);
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
     }
 }

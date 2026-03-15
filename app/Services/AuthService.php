@@ -6,12 +6,14 @@ use App\Events\UserEmailVerified;
 use App\Events\UserRegistered;
 use App\Models\EmailVerificationToken;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class AuthService
 {
+    private const LOGIN_OTP_TTL_SECONDS = 300;
+
     /**
      * Generate a unique account number in format XXXX-XXXX-XXXX.
      */
@@ -33,10 +35,7 @@ class AuthService
      */
     public function register(array $data): array
     {
-        $fullName = trim(($data['first_name'] ?? '').' '.($data['middle_name'] ?? '').' '.($data['last_name'] ?? ''));
-
         $user = User::query()->create([
-            'name' => $fullName,
             'first_name' => $data['first_name'],
             'middle_name' => $data['middle_name'] ?? null,
             'last_name' => $data['last_name'],
@@ -67,26 +66,39 @@ class AuthService
 
     /**
      * @param  array{email: string, password: string}  $credentials
-     * @return array{user: User, token: string}|null
+     * @return array<string, mixed>|null
      */
     public function login(array $credentials): ?array
     {
-        if (! Auth::attempt($credentials)) {
-            return null;
-        }
-
         $user = User::query()->where('email', $credentials['email'])->first();
 
-        if (! $user) {
+        if (! $user || ! Hash::check($credentials['password'], (string) $user->password)) {
             return null;
         }
 
         if ($user->email_verified_at === null) {
-            Auth::logout();
-
             return [
                 'blocked' => true,
                 'reason' => 'email_not_verified',
+            ];
+        }
+
+        $roles = $user->getRoleNames()->values()->all();
+
+        if ($user->hasTwoFactorEnabled()) {
+            $challengeToken = Str::random(64);
+
+            Cache::put($this->loginOtpCacheKey($challengeToken), [
+                'user_id' => $user->id,
+            ], now()->addSeconds(self::LOGIN_OTP_TTL_SECONDS));
+
+            return [
+                'requires_two_factor' => true,
+                'two_factor_enabled' => true,
+                'otp_challenge_token' => $challengeToken,
+                'otp_expires_in' => self::LOGIN_OTP_TTL_SECONDS,
+                'roles' => $roles,
+                'user' => $user,
             ];
         }
 
@@ -96,12 +108,83 @@ class AuthService
         return [
             'user' => $user,
             'token' => $token,
+            'roles' => $roles,
+            'two_factor_enabled' => false,
+        ];
+    }
+
+    /**
+     * @param  array{otp_challenge_token: string, otp: string}  $payload
+     * @return array<string, mixed>|null
+     */
+    public function verifyLoginOtp(array $payload): ?array
+    {
+        $challenge = Cache::get($this->loginOtpCacheKey($payload['otp_challenge_token']));
+
+        if (! is_array($challenge) || empty($challenge['user_id'])) {
+            return [
+                'blocked' => true,
+                'reason' => 'otp_challenge_expired',
+            ];
+        }
+
+        $user = User::query()->find($challenge['user_id']);
+
+        if (! $user) {
+            Cache::forget($this->loginOtpCacheKey($payload['otp_challenge_token']));
+
+            return [
+                'blocked' => true,
+                'reason' => 'otp_challenge_invalid',
+            ];
+        }
+
+        if (! $user->hasTwoFactorEnabled()) {
+            Cache::forget($this->loginOtpCacheKey($payload['otp_challenge_token']));
+
+            return [
+                'blocked' => true,
+                'reason' => 'two_factor_not_enabled',
+            ];
+        }
+
+        if (! $this->matchesOtp($payload['otp'], (string) $user->two_factor_secret)) {
+            return [
+                'blocked' => true,
+                'reason' => 'invalid_otp',
+            ];
+        }
+
+        Cache::forget($this->loginOtpCacheKey($payload['otp_challenge_token']));
+
+        $user->tokens()->delete();
+        $token = $user->createToken('auth')->plainTextToken;
+
+        return [
+            'user' => $user,
+            'token' => $token,
+            'roles' => $user->getRoleNames()->values()->all(),
+            'two_factor_enabled' => true,
         ];
     }
 
     public function logout(User $user): void
     {
         $user->currentAccessToken()?->delete();
+    }
+
+    public function enableOrUpdateTwoFactor(User $user, string $otp): void
+    {
+        $user->forceFill([
+            'two_factor_secret' => Hash::make($otp),
+        ])->save();
+    }
+
+    public function disableTwoFactor(User $user): void
+    {
+        $user->forceFill([
+            'two_factor_secret' => null,
+        ])->save();
     }
 
     /**
@@ -124,5 +207,23 @@ class AuthService
         event(new UserEmailVerified($record->user));
 
         return true;
+    }
+
+    private function loginOtpCacheKey(string $challengeToken): string
+    {
+        return 'auth:login-otp:'.$challengeToken;
+    }
+
+    private function matchesOtp(string $otp, string $storedSecret): bool
+    {
+        if ($storedSecret === '') {
+            return false;
+        }
+
+        if (str_starts_with($storedSecret, '$2y$') || str_starts_with($storedSecret, '$argon2')) {
+            return Hash::check($otp, $storedSecret);
+        }
+
+        return hash_equals($storedSecret, $otp);
     }
 }

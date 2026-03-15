@@ -6,7 +6,6 @@ use App\Events\NewNotificationEvent;
 use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class NotificationService
 {
@@ -29,6 +28,14 @@ class NotificationService
         return User::role(['Super Admin', 'Admin'])->get();
     }
 
+    /**
+     * @return \Illuminate\Support\Collection<int, User>
+     */
+    public function getAdminAndPartnerUsers(): \Illuminate\Support\Collection
+    {
+        return User::role(['Super Admin', 'Admin', 'Partner'])->get();
+    }
+
     public function create(User $user, string $type, array $data): Notification
     {
         $notificationData = array_merge($data, [
@@ -37,7 +44,6 @@ class NotificationService
         ]);
 
         $notification = Notification::query()->create([
-            'id' => Str::uuid(),
             'user_id' => $user->id,
             'type' => $type,
             'data' => $notificationData,
@@ -52,5 +58,38 @@ class NotificationService
         }
 
         return $notification;
+    }
+
+    public function markAsRead(Notification $notification): void
+    {
+        $notification->forceFill([
+            'is_read' => true,
+            'read_at' => now(),
+        ])->save();
+    }
+
+    public function markAllAsRead(User $user): int
+    {
+        return Notification::query()
+            ->where('user_id', $user->id)
+            ->where('is_read', false)
+            ->update([
+                'is_read' => true,
+                'read_at' => now(),
+                'updated_at' => now(),
+            ]);
+    }
+
+    public function getUnreadCount(User $user): int
+    {
+        return Notification::query()
+            ->where('user_id', $user->id)
+            ->where('is_read', false)
+            ->count();
+    }
+
+    public function delete(Notification $notification): bool
+    {
+        return (bool) $notification->delete();
     }
 }

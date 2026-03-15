@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('asl_media', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('model_type');
-            $table->unsignedBigInteger('model_id');
+            $table->uuid('model_id');
             $table->string('collection_name')->default('default');
             $table->string('file_name');
             $table->string('disk')->default('local');

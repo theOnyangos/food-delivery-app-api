@@ -20,7 +20,6 @@ class SuperAdminSeeder extends Seeder
         $user = User::query()->firstOrCreate(
             ['email' => $email],
             [
-                'name' => 'Super Admin',
                 'first_name' => 'Super',
                 'middle_name' => null,
                 'last_name' => 'Admin',
