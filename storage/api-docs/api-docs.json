@@ -487,6 +487,607 @@
                 ]
             }
         },
+        "/api/delivery-addresses": {
+            "get": {
+                "tags": [
+                    "Delivery Addresses"
+                ],
+                "summary": "List authenticated user delivery addresses",
+                "operationId": "listDeliveryAddresses",
+                "responses": {
+                    "200": {
+                        "description": "Delivery addresses fetched successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Delivery Addresses"
+                ],
+                "summary": "Create delivery address for authenticated user",
+                "description": "Creates a delivery address and sends in-app notifications to users with Admin and Super Admin roles.",
+                "operationId": "createDeliveryAddress",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "address_line",
+                                    "city",
+                                    "zip_code",
+                                    "longitude",
+                                    "latitude"
+                                ],
+                                "properties": {
+                                    "label": {
+                                        "type": "string",
+                                        "example": "Home",
+                                        "nullable": true
+                                    },
+                                    "address_line": {
+                                        "type": "string",
+                                        "example": "123 Koinange Street"
+                                    },
+                                    "city": {
+                                        "type": "string",
+                                        "example": "Nairobi"
+                                    },
+                                    "zip_code": {
+                                        "type": "string",
+                                        "example": "00100"
+                                    },
+                                    "longitude": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 36.8219
+                                    },
+                                    "latitude": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": -1.2921
+                                    },
+                                    "delivery_notes": {
+                                        "type": "string",
+                                        "example": "Call on arrival",
+                                        "nullable": true
+                                    },
+                                    "is_default": {
+                                        "type": "boolean",
+                                        "example": true,
+                                        "nullable": true
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active",
+                                        "nullable": true,
+                                        "enum": [
+                                            "active",
+                                            "inactive"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Delivery address created successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/delivery-addresses/{deliveryAddress}": {
+            "get": {
+                "tags": [
+                    "Delivery Addresses"
+                ],
+                "summary": "Get a specific delivery address for authenticated user",
+                "operationId": "showDeliveryAddress",
+                "parameters": [
+                    {
+                        "name": "deliveryAddress",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Delivery address fetched successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Delivery Addresses"
+                ],
+                "summary": "Update delivery address for authenticated user",
+                "description": "Updates a delivery address and sends in-app notifications to users with Admin and Super Admin roles.",
+                "operationId": "updateDeliveryAddress",
+                "parameters": [
+                    {
+                        "name": "deliveryAddress",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "label": {
+                                        "type": "string",
+                                        "example": "Office",
+                                        "nullable": true
+                                    },
+                                    "address_line": {
+                                        "type": "string",
+                                        "example": "456 Ngong Road"
+                                    },
+                                    "city": {
+                                        "type": "string",
+                                        "example": "Nairobi"
+                                    },
+                                    "zip_code": {
+                                        "type": "string",
+                                        "example": "00100"
+                                    },
+                                    "longitude": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 36.8065
+                                    },
+                                    "latitude": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": -1.3032
+                                    },
+                                    "delivery_notes": {
+                                        "type": "string",
+                                        "example": "Leave at reception",
+                                        "nullable": true
+                                    },
+                                    "is_default": {
+                                        "type": "boolean",
+                                        "example": false,
+                                        "nullable": true
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active",
+                                        "nullable": true,
+                                        "enum": [
+                                            "active",
+                                            "inactive"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Delivery address updated successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Delivery Addresses"
+                ],
+                "summary": "Delete delivery address for authenticated user",
+                "description": "Deletes a delivery address and sends in-app notifications to users with Admin and Super Admin roles.",
+                "operationId": "deleteDeliveryAddress",
+                "parameters": [
+                    {
+                        "name": "deliveryAddress",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Delivery address deleted successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/delivery-zones": {
+            "get": {
+                "tags": [
+                    "Delivery Zones"
+                ],
+                "summary": "List delivery zones (Admin)",
+                "operationId": "listDeliveryZones",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "inactive"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "zip_code",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Delivery zones fetched successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Delivery Zones"
+                ],
+                "summary": "Create a delivery zone (Admin)",
+                "description": "Creates a delivery zone and sends in-app notifications to users with Admin and Super Admin roles.",
+                "operationId": "createDeliveryZone",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "zip_code",
+                                    "delivery_fee"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Westlands"
+                                    },
+                                    "zip_code": {
+                                        "type": "string",
+                                        "example": "00100"
+                                    },
+                                    "delivery_fee": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 150
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active",
+                                        "enum": [
+                                            "active",
+                                            "inactive"
+                                        ]
+                                    },
+                                    "minimum_order_amount": {
+                                        "type": "integer",
+                                        "example": 1000,
+                                        "nullable": true
+                                    },
+                                    "estimated_delivery_minutes": {
+                                        "type": "integer",
+                                        "example": 45,
+                                        "nullable": true
+                                    },
+                                    "is_serviceable": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Delivery zone created successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/delivery-zones/{deliveryZone}": {
+            "get": {
+                "tags": [
+                    "Delivery Zones"
+                ],
+                "summary": "Get delivery zone details (Admin)",
+                "operationId": "showDeliveryZone",
+                "parameters": [
+                    {
+                        "name": "deliveryZone",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Delivery zone fetched successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Delivery Zones"
+                ],
+                "summary": "Update delivery zone (Admin)",
+                "description": "Updates a delivery zone and sends in-app notifications to users with Admin and Super Admin roles.",
+                "operationId": "updateDeliveryZone",
+                "parameters": [
+                    {
+                        "name": "deliveryZone",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Westlands"
+                                    },
+                                    "zip_code": {
+                                        "type": "string",
+                                        "example": "00100"
+                                    },
+                                    "delivery_fee": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 200
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active",
+                                        "enum": [
+                                            "active",
+                                            "inactive"
+                                        ]
+                                    },
+                                    "minimum_order_amount": {
+                                        "type": "integer",
+                                        "example": 1200,
+                                        "nullable": true
+                                    },
+                                    "estimated_delivery_minutes": {
+                                        "type": "integer",
+                                        "example": 40,
+                                        "nullable": true
+                                    },
+                                    "is_serviceable": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Delivery zone updated successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Delivery Zones"
+                ],
+                "summary": "Delete a delivery zone (Admin)",
+                "description": "Deletes a delivery zone and sends in-app notifications to users with Admin and Super Admin roles.",
+                "operationId": "deleteDeliveryZone",
+                "parameters": [
+                    {
+                        "name": "deliveryZone",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Delivery zone deleted successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/delivery-zones/check-coverage": {
+            "get": {
+                "tags": [
+                    "Delivery Zones"
+                ],
+                "summary": "Check if a zip code is covered for delivery",
+                "operationId": "checkDeliveryCoverage",
+                "parameters": [
+                    {
+                        "name": "zip_code",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Coverage checked successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/notifications/stream": {
             "get": {
                 "tags": [
@@ -1639,6 +2240,14 @@
         {
             "name": "Auth",
             "description": "Auth"
+        },
+        {
+            "name": "Delivery Addresses",
+            "description": "Delivery Addresses"
+        },
+        {
+            "name": "Delivery Zones",
+            "description": "Delivery Zones"
         },
         {
             "name": "Notifications",

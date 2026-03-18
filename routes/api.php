@@ -4,6 +4,8 @@ use App\Http\Controllers\Api\AdminPermissionController;
 use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AdminUserRoleController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DeliveryAddressController;
+use App\Http\Controllers\Api\DeliveryZoneController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\UploadController;
 use Illuminate\Broadcasting\BroadcastController;
@@ -77,3 +79,25 @@ Route::middleware(['auth:sanctum', 'role_or_permission:Super Admin|Admin|Partner
 
 Route::post('/broadcasting/auth', [BroadcastController::class, 'authenticate'])
     ->middleware('auth:sanctum');
+
+Route::middleware(['auth:sanctum', 'role_or_permission:Super Admin|Admin'])->prefix('admin/delivery-zones')->group(function (): void {
+    Route::get('/', [DeliveryZoneController::class, 'index']);
+    Route::post('/', [DeliveryZoneController::class, 'store']);
+    Route::get('/{deliveryZone}', [DeliveryZoneController::class, 'show']);
+    Route::put('/{deliveryZone}', [DeliveryZoneController::class, 'update']);
+    Route::patch('/{deliveryZone}', [DeliveryZoneController::class, 'update']);
+    Route::delete('/{deliveryZone}', [DeliveryZoneController::class, 'destroy']);
+});
+
+Route::middleware('auth:sanctum')->group(function (): void {
+    Route::get('/delivery-zones/check-coverage', [DeliveryZoneController::class, 'checkCoverage']);
+
+    Route::prefix('delivery-addresses')->group(function (): void {
+        Route::get('/', [DeliveryAddressController::class, 'index']);
+        Route::post('/', [DeliveryAddressController::class, 'store']);
+        Route::get('/{deliveryAddress}', [DeliveryAddressController::class, 'show']);
+        Route::put('/{deliveryAddress}', [DeliveryAddressController::class, 'update']);
+        Route::patch('/{deliveryAddress}', [DeliveryAddressController::class, 'update']);
+        Route::delete('/{deliveryAddress}', [DeliveryAddressController::class, 'destroy']);
+    });
+});

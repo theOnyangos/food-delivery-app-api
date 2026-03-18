@@ -44,6 +44,24 @@ The API provides the core backend capabilities required in a food delivery ecosy
 	- `GET /api/notifications/preferences`
 	- `PUT/PATCH /api/notifications/preferences`
 
+### 5) Delivery Geography & Addresses
+
+- Delivery zones (Admin): `GET/POST/PUT/PATCH/DELETE /api/admin/delivery-zones`
+- Delivery coverage check: `GET /api/delivery-zones/check-coverage?zip_code=...`
+- User delivery addresses: `GET/POST/PUT/PATCH/DELETE /api/delivery-addresses`
+- In-app notifications: create/update/delete actions for both delivery zones and delivery addresses trigger notifications to users with **Admin** and **Super Admin** roles.
+
+#### Notification Types (Delivery CRUD)
+
+| Module | Action | Notification Type |
+| --- | --- | --- |
+| Delivery Zone | Create | `delivery_zone_created` |
+| Delivery Zone | Update | `delivery_zone_updated` |
+| Delivery Zone | Delete | `delivery_zone_deleted` |
+| Delivery Address | Create | `delivery_address_created` |
+| Delivery Address | Update | `delivery_address_updated` |
+| Delivery Address | Delete | `delivery_address_deleted` |
+
 ## Tech Stack
 
 - Laravel 12
