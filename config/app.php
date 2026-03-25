@@ -126,4 +126,17 @@ return [
     'super_admin_email' => env('SUPER_ADMIN_EMAIL', 'admin@asl.local'),
     'frontend_login_url' => env('FRONTEND_LOGIN_URL', '/login'),
 
+    /*
+    | Public URL of the asl-dashboard SPA (scheme + host, no trailing slash).
+    | Used in password-reset and invite emails: {client_url}/reset-password?token=&email=
+    |
+    | Do not fall back to APP_URL — that is typically the API host and would produce wrong links.
+    */
+    'client_url' => env('CLIENT_URL', env('FRONTEND_URL', 'http://localhost:3000')),
+
+    /*
+    | Legacy alias; prefer CLIENT_URL for reset links. Kept for backward compatibility.
+    */
+    'frontend_url' => env('FRONTEND_URL', env('APP_URL', 'http://localhost')),
+
 ];

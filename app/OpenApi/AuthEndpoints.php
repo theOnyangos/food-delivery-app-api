@@ -124,6 +124,7 @@ use OpenApi\Attributes as OA;
     operationId: 'forgotPassword',
     tags: ['Auth'],
     summary: 'Request password reset link',
+    description: 'Dispatches a queued job to email a reset link. Response is immediate; delivery uses CLIENT_URL for the SPA link.',
     requestBody: new OA\RequestBody(
         required: true,
         content: new OA\JsonContent(
@@ -134,7 +135,7 @@ use OpenApi\Attributes as OA;
         )
     ),
     responses: [
-        new OA\Response(response: 200, description: 'Reset link requested'),
+        new OA\Response(response: 200, description: 'Accepted. If an account exists for that email, a reset link will be sent shortly.'),
     ]
 )]
 #[OA\Post(
@@ -225,6 +226,4 @@ use OpenApi\Attributes as OA;
         new OA\Response(response: 401, description: 'Unauthenticated'),
     ]
 )]
-class AuthEndpoints
-{
-}
+class AuthEndpoints {}

@@ -6,6 +6,187 @@
         "version": "1.0.0"
     },
     "paths": {
+        "/api/admin/users/role-options": {
+            "get": {
+                "tags": [
+                    "Admin Users"
+                ],
+                "summary": "List roles assignable when inviting users",
+                "operationId": "adminUserRoleOptions",
+                "responses": {
+                    "200": {
+                        "description": "Roles fetched successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/users": {
+            "get": {
+                "tags": [
+                    "Admin Users"
+                ],
+                "summary": "Paginated list of users (for admin)",
+                "operationId": "adminListUsers",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Users fetched successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Admin Users"
+                ],
+                "summary": "Create user and send password-setup email (invite)",
+                "description": "User is created then a reset/invite email is queued. Link base URL uses CLIENT_URL. Provide at least one of role_names or role_ids.",
+                "operationId": "adminInviteUser",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "first_name",
+                                    "last_name",
+                                    "email"
+                                ],
+                                "properties": {
+                                    "first_name": {
+                                        "type": "string",
+                                        "example": "Jane"
+                                    },
+                                    "middle_name": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "example": "Doe"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "jane@example.com"
+                                    },
+                                    "role_names": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "example": "Customer"
+                                        }
+                                    },
+                                    "role_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User created; invite email queued"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "429": {
+                        "description": "Too many requests"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/users/{user}/resend-invite": {
+            "post": {
+                "tags": [
+                    "Admin Users"
+                ],
+                "summary": "Resend password-setup email for an unverified user",
+                "operationId": "adminResendUserInvite",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invite email queued"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Account already verified"
+                    },
+                    "429": {
+                        "description": "Too many requests"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/auth/register": {
             "post": {
                 "tags": [
@@ -270,6 +451,7 @@
                     "Auth"
                 ],
                 "summary": "Request password reset link",
+                "description": "Dispatches a queued job to email a reset link. Response is immediate; delivery uses CLIENT_URL for the SPA link.",
                 "operationId": "forgotPassword",
                 "requestBody": {
                     "required": true,
@@ -293,7 +475,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Reset link requested"
+                        "description": "Accepted. If an account exists for that email, a reset link will be sent shortly."
                     }
                 }
             }
@@ -1088,6 +1270,952 @@
                 ]
             }
         },
+        "/api/meals": {
+            "get": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "List published meals for authenticated users",
+                "description": "Returns only published meals. Recipe visibility is filtered by user tier: pro users can see pro-only recipes, signed users cannot.",
+                "operationId": "listMeals",
+                "parameters": [
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "tag",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Meals fetched successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/meals/{meal}": {
+            "get": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Get one published meal for authenticated users",
+                "operationId": "showMeal",
+                "parameters": [
+                    {
+                        "name": "meal",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Meal fetched successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/my-meals": {
+            "get": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "List meals manageable by current Admin/Partner",
+                "operationId": "listMyMeals",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "draft",
+                                "published",
+                                "archived"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Manageable meals fetched successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Create a meal for current Admin/Partner",
+                "description": "Creates a meal with optional nested nutrition, allergens, ingredients, recipes, steps, and tutorials.",
+                "operationId": "createMyMeal",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "description",
+                                    "status"
+                                ],
+                                "properties": {
+                                    "category_id": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "nullable": true
+                                    },
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Grilled Chicken Bowl"
+                                    },
+                                    "excerpt": {
+                                        "type": "string",
+                                        "example": "High-protein healthy bowl",
+                                        "nullable": true
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Fresh grilled chicken with vegetables."
+                                    },
+                                    "thumbnail_image": {
+                                        "type": "string",
+                                        "example": "https://example.com/images/meal-thumb.jpg",
+                                        "nullable": true
+                                    },
+                                    "images": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "nullable": true
+                                    },
+                                    "cooking_time": {
+                                        "type": "integer",
+                                        "example": 35,
+                                        "nullable": true
+                                    },
+                                    "servings": {
+                                        "type": "integer",
+                                        "example": 2,
+                                        "nullable": true
+                                    },
+                                    "calories": {
+                                        "type": "integer",
+                                        "example": 540,
+                                        "nullable": true
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "draft",
+                                        "enum": [
+                                            "draft",
+                                            "published",
+                                            "archived"
+                                        ]
+                                    },
+                                    "tags": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "nullable": true
+                                    },
+                                    "published_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Meal created successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/my-meals/{meal}": {
+            "get": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Get one manageable meal by id",
+                "operationId": "showMyMeal",
+                "parameters": [
+                    {
+                        "name": "meal",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Meal fetched successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Update one manageable meal",
+                "description": "Supports partial nested updates by replacing nested arrays passed in request payload.",
+                "operationId": "updateMyMeal",
+                "parameters": [
+                    {
+                        "name": "meal",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Updated Meal Title"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "published",
+                                        "enum": [
+                                            "draft",
+                                            "published",
+                                            "archived"
+                                        ]
+                                    },
+                                    "thumbnail_image": {
+                                        "type": "string",
+                                        "example": "https://example.com/images/new-thumb.jpg",
+                                        "nullable": true
+                                    },
+                                    "images": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Meal updated successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Delete one manageable meal",
+                "operationId": "deleteMyMeal",
+                "parameters": [
+                    {
+                        "name": "meal",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Meal deleted successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/my-meals/{meal}/nutrition": {
+            "put": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Add or update meal nutrition",
+                "operationId": "upsertMealNutrition",
+                "parameters": [
+                    {
+                        "name": "meal",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "fats": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 12.5,
+                                        "nullable": true
+                                    },
+                                    "protein": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 30,
+                                        "nullable": true
+                                    },
+                                    "carbs": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 45,
+                                        "nullable": true
+                                    },
+                                    "metadata": {
+                                        "type": "object",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Meal nutrition updated successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/my-meals/{meal}/allergens": {
+            "put": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Replace meal allergens list",
+                "operationId": "syncMealAllergens",
+                "parameters": [
+                    {
+                        "name": "meal",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "allergens"
+                                ],
+                                "properties": {
+                                    "allergens": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Meal allergens updated successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/my-meals/{meal}/ingredients": {
+            "put": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Replace meal ingredients list",
+                "operationId": "syncMealIngredients",
+                "parameters": [
+                    {
+                        "name": "meal",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "ingredients"
+                                ],
+                                "properties": {
+                                    "ingredients": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "meal_type": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "metadata": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Meal ingredients updated successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/my-meals/{meal}/recipes": {
+            "put": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Replace meal recipes list (with steps)",
+                "operationId": "syncMealRecipes",
+                "parameters": [
+                    {
+                        "name": "meal",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "recipes"
+                                ],
+                                "properties": {
+                                    "recipes": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Meal recipes updated successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/my-meals/{meal}/tutorials": {
+            "put": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Replace meal tutorials list",
+                "operationId": "syncMealTutorials",
+                "parameters": [
+                    {
+                        "name": "meal",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "tutorials"
+                                ],
+                                "properties": {
+                                    "tutorials": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Meal tutorials updated successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/cache/redis/clear": {
+            "post": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Clear all redis cache (Super Admin)",
+                "operationId": "clearRedisCache",
+                "responses": {
+                    "200": {
+                        "description": "Redis cache cleared successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/meal-categories": {
+            "get": {
+                "tags": [
+                    "Meal Categories"
+                ],
+                "summary": "List meal categories",
+                "operationId": "listMealCategories",
+                "responses": {
+                    "200": {
+                        "description": "Meal categories fetched successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Meal Categories"
+                ],
+                "summary": "Create meal category (Admin)",
+                "operationId": "createMealCategory",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Breakfast"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "image": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "icon": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Meal category created successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/meal-categories/{mealCategory}": {
+            "get": {
+                "tags": [
+                    "Meal Categories"
+                ],
+                "summary": "Get one meal category",
+                "operationId": "showMealCategory",
+                "parameters": [
+                    {
+                        "name": "mealCategory",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Meal category fetched successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Meal Categories"
+                ],
+                "summary": "Update meal category (Admin)",
+                "operationId": "updateMealCategory",
+                "parameters": [
+                    {
+                        "name": "mealCategory",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Lunch"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "image": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "icon": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Meal category updated successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Meal Categories"
+                ],
+                "summary": "Delete meal category (Admin)",
+                "operationId": "deleteMealCategory",
+                "parameters": [
+                    {
+                        "name": "mealCategory",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Meal category deleted successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/notifications/stream": {
             "get": {
                 "tags": [
@@ -1807,31 +2935,6 @@
                 ]
             }
         },
-        "/api/admin/users": {
-            "get": {
-                "tags": [
-                    "Role Management"
-                ],
-                "summary": "List users with roles",
-                "operationId": "listUsersForRoles",
-                "responses": {
-                    "200": {
-                        "description": "Users fetched successfully"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
         "/api/admin/users/{user}/roles": {
             "put": {
                 "tags": [
@@ -2238,6 +3341,10 @@
     },
     "tags": [
         {
+            "name": "Admin Users",
+            "description": "Admin Users"
+        },
+        {
             "name": "Auth",
             "description": "Auth"
         },
@@ -2248,6 +3355,14 @@
         {
             "name": "Delivery Zones",
             "description": "Delivery Zones"
+        },
+        {
+            "name": "Meals",
+            "description": "Meals"
+        },
+        {
+            "name": "Meal Categories",
+            "description": "Meal Categories"
         },
         {
             "name": "Notifications",

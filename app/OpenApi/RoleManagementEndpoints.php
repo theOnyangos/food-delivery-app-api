@@ -145,18 +145,6 @@ use OpenApi\Attributes as OA;
         new OA\Response(response: 403, description: 'Forbidden'),
     ]
 )]
-#[OA\Get(
-    path: '/api/admin/users',
-    operationId: 'listUsersForRoles',
-    tags: ['Role Management'],
-    summary: 'List users with roles',
-    security: [['sanctum' => []]],
-    responses: [
-        new OA\Response(response: 200, description: 'Users fetched successfully'),
-        new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
-    ]
-)]
 #[OA\Put(
     path: '/api/admin/users/{user}/roles',
     operationId: 'updateUserRoles',

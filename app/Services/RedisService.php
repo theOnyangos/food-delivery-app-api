@@ -107,4 +107,9 @@ class RedisService
     {
         return Cache::store($this->store)->tags([$tag])->flush();
     }
+
+    public function flushAll(): bool
+    {
+        return Cache::store($this->store)->flush();
+    }
 }

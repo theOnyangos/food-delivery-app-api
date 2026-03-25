@@ -2,10 +2,13 @@
 
 use App\Http\Controllers\Api\AdminPermissionController;
 use App\Http\Controllers\Api\AdminRoleController;
+use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\AdminUserRoleController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DeliveryAddressController;
 use App\Http\Controllers\Api\DeliveryZoneController;
+use App\Http\Controllers\Api\MealCategoryController;
+use App\Http\Controllers\Api\MealController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\UploadController;
 use Illuminate\Broadcasting\BroadcastController;
@@ -54,9 +57,15 @@ Route::middleware(['auth:sanctum', 'permission:manage roles'])->group(function (
     Route::put('admin/roles/{role}/permissions', [AdminRoleController::class, 'syncPermissions']);
     Route::patch('admin/roles/{role}/permissions', [AdminRoleController::class, 'syncPermissions']);
     Route::get('admin/permissions', [AdminPermissionController::class, 'index']);
-    Route::get('admin/users', [AdminUserRoleController::class, 'index']);
     Route::put('admin/users/{user}/roles', [AdminUserRoleController::class, 'updateRoles']);
     Route::patch('admin/users/{user}/roles', [AdminUserRoleController::class, 'updateRoles']);
+});
+
+Route::middleware(['auth:sanctum', 'role_or_permission:Super Admin|manage users'])->group(function (): void {
+    Route::get('admin/users/role-options', [AdminUserController::class, 'roleOptions']);
+    Route::get('admin/users', [AdminUserRoleController::class, 'index']);
+    Route::post('admin/users', [AdminUserController::class, 'store']);
+    Route::post('admin/users/{user}/resend-invite', [AdminUserController::class, 'resendInvite']);
 });
 
 Route::get('/notifications/stream', [NotificationController::class, 'index']);
@@ -100,4 +109,39 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::patch('/{deliveryAddress}', [DeliveryAddressController::class, 'update']);
         Route::delete('/{deliveryAddress}', [DeliveryAddressController::class, 'destroy']);
     });
+
+    Route::get('/meals', [MealController::class, 'index']);
+    Route::get('/meals/{meal}', [MealController::class, 'show']);
+    Route::get('/meal-categories', [MealCategoryController::class, 'index']);
+    Route::get('/meal-categories/{mealCategory}', [MealCategoryController::class, 'show']);
+});
+
+Route::middleware(['auth:sanctum', 'role_or_permission:Super Admin|Admin|Partner'])->group(function (): void {
+    Route::get('/my-meals', [MealController::class, 'myMeals']);
+    Route::post('/my-meals', [MealController::class, 'store']);
+    Route::get('/my-meals/{meal}', [MealController::class, 'showMine']);
+    Route::put('/my-meals/{meal}', [MealController::class, 'update']);
+    Route::patch('/my-meals/{meal}', [MealController::class, 'update']);
+    Route::delete('/my-meals/{meal}', [MealController::class, 'destroy']);
+    Route::put('/my-meals/{meal}/nutrition', [MealController::class, 'upsertNutrition']);
+    Route::patch('/my-meals/{meal}/nutrition', [MealController::class, 'upsertNutrition']);
+    Route::put('/my-meals/{meal}/allergens', [MealController::class, 'syncAllergens']);
+    Route::patch('/my-meals/{meal}/allergens', [MealController::class, 'syncAllergens']);
+    Route::put('/my-meals/{meal}/ingredients', [MealController::class, 'syncIngredients']);
+    Route::patch('/my-meals/{meal}/ingredients', [MealController::class, 'syncIngredients']);
+    Route::put('/my-meals/{meal}/recipes', [MealController::class, 'syncRecipes']);
+    Route::patch('/my-meals/{meal}/recipes', [MealController::class, 'syncRecipes']);
+    Route::put('/my-meals/{meal}/tutorials', [MealController::class, 'syncTutorials']);
+    Route::patch('/my-meals/{meal}/tutorials', [MealController::class, 'syncTutorials']);
+});
+
+Route::middleware(['auth:sanctum', 'role_or_permission:Super Admin|Admin'])->group(function (): void {
+    Route::post('/meal-categories', [MealCategoryController::class, 'store']);
+    Route::put('/meal-categories/{mealCategory}', [MealCategoryController::class, 'update']);
+    Route::patch('/meal-categories/{mealCategory}', [MealCategoryController::class, 'update']);
+    Route::delete('/meal-categories/{mealCategory}', [MealCategoryController::class, 'destroy']);
+});
+
+Route::middleware(['auth:sanctum', 'role:Super Admin'])->group(function (): void {
+    Route::post('/admin/cache/redis/clear', [MealController::class, 'clearRedisCache']);
 });

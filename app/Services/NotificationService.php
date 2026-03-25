@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Events\NewNotificationEvent;
 use App\Models\Notification;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
 class NotificationService
@@ -21,19 +22,27 @@ class NotificationService
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, User>
+     * @return Collection<int, User>
      */
-    public function getAdminUsers(): \Illuminate\Support\Collection
+    public function getAdminUsers(): Collection
     {
-        return User::role(['Super Admin', 'Admin'])->get();
+        return User::query()
+            ->whereHas('roles', function ($query): void {
+                $query->whereIn('name', ['Super Admin', 'Admin']);
+            })
+            ->get();
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, User>
+     * @return Collection<int, User>
      */
-    public function getAdminAndPartnerUsers(): \Illuminate\Support\Collection
+    public function getAdminAndPartnerUsers(): Collection
     {
-        return User::role(['Super Admin', 'Admin', 'Partner'])->get();
+        return User::query()
+            ->whereHas('roles', function ($query): void {
+                $query->whereIn('name', ['Super Admin', 'Admin', 'Partner']);
+            })
+            ->get();
     }
 
     public function create(User $user, string $type, array $data): Notification
