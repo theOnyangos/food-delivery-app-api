@@ -1,21 +1,20 @@
 <?php
 
 use App\Models\Meal;
-use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
-it('allows meal owner to add nutrition allergens ingredients recipes and tutorials via component endpoints', function (): void {
-    $partnerRole = Role::query()->create([
-        'name' => 'Partner',
-        'guard_name' => 'web',
-    ]);
+beforeEach(function (): void {
+    $this->seed(RolesAndPermissionsSeeder::class);
+});
 
+it('allows meal owner to add nutrition allergens ingredients recipes and tutorials via component endpoints', function (): void {
     $partner = User::factory()->create();
-    $partner->assignRole($partnerRole);
+    $partner->assignRole('Partner');
 
     $meal = Meal::factory()->create([
         'user_id' => $partner->id,
@@ -114,16 +113,11 @@ it('allows meal owner to add nutrition allergens ingredients recipes and tutoria
 });
 
 it('blocks non-owner from updating meal components', function (): void {
-    $partnerRole = Role::query()->create([
-        'name' => 'Partner',
-        'guard_name' => 'web',
-    ]);
-
     $owner = User::factory()->create();
-    $owner->assignRole($partnerRole);
+    $owner->assignRole('Partner');
 
     $intruder = User::factory()->create();
-    $intruder->assignRole($partnerRole);
+    $intruder->assignRole('Partner');
 
     $meal = Meal::factory()->create([
         'user_id' => $owner->id,

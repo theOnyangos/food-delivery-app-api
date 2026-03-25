@@ -104,4 +104,45 @@ class User extends Authenticatable
     {
         $this->notify(new QueuedResetPasswordNotification($token));
     }
+
+    /**
+     * Whether the user can use the staff/partner AI chat (not the assistant popup daily limit path).
+     */
+    public function hasAiAssistantAccess(): bool
+    {
+        if ($this->hasAnyRole(['Super Admin', 'Admin', 'Partner'])) {
+            return true;
+        }
+
+        return $this->can('use ai chat');
+    }
+
+    /**
+     * Daily AI message limit for this user. Staff use config; partners use partner/customer config fallback.
+     */
+    public function getAiAssistantDailyLimit(): int
+    {
+        if ($this->hasAnyRole(['Super Admin', 'Admin'])) {
+            return (int) config('ai_agent.daily_limit_admin', 0);
+        }
+        if ($this->hasRole('Partner')) {
+            $partner = (int) config('ai_agent.daily_limit_partner', 0);
+
+            return $partner > 0 ? $partner : (int) config('ai_agent.daily_limit_customer', 5);
+        }
+
+        return (int) config('ai_agent.daily_limit_customer', 5);
+    }
+
+    /**
+     * Live support chat: staff always; partners need permission; customers may be granted for future flows.
+     */
+    public function hasLiveChatAccess(): bool
+    {
+        if ($this->hasAnyRole(['Super Admin', 'Admin'])) {
+            return true;
+        }
+
+        return $this->can('use live chat');
+    }
 }

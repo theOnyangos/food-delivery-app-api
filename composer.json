@@ -16,6 +16,7 @@
         "laravel/reverb": "^1.7",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
+        "openai-php/client": "^0.18",
         "predis/predis": "^2.2",
         "ramsey/uuid": "^4.7",
         "spatie/laravel-permission": "^6.0",

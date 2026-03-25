@@ -8,11 +8,12 @@ use OpenApi\Attributes as OA;
     path: '/api/delivery-addresses',
     operationId: 'listDeliveryAddresses',
     tags: ['Delivery Addresses'],
-    summary: 'List authenticated user delivery addresses',
+    summary: 'List authenticated user delivery addresses (requires manage delivery addresses or staff/customer roles)',
     security: [['sanctum' => []]],
     responses: [
         new OA\Response(response: 200, description: 'Delivery addresses fetched successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_DELIVERY_ADDRESSES),
     ]
 )]
 #[OA\Post(
@@ -43,6 +44,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 201, description: 'Delivery address created successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_DELIVERY_ADDRESSES),
         new OA\Response(response: 422, description: 'Validation failed'),
     ]
 )]
@@ -58,7 +60,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Delivery address fetched successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_DELIVERY_ADDRESSES),
         new OA\Response(response: 404, description: 'Not found'),
     ]
 )]
@@ -92,7 +94,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Delivery address updated successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_DELIVERY_ADDRESSES),
         new OA\Response(response: 422, description: 'Validation failed'),
     ]
 )]
@@ -109,9 +111,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Delivery address deleted successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_DELIVERY_ADDRESSES),
     ]
 )]
-class DeliveryAddressEndpoints
-{
-}
+class DeliveryAddressEndpoints {}

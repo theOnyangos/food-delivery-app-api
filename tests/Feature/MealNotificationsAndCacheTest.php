@@ -1,37 +1,26 @@
 <?php
 
 use App\Models\Notification;
-use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function (): void {
+    $this->seed(RolesAndPermissionsSeeder::class);
+});
+
 it('sends meal crud notifications to admin and partner users', function (): void {
-    $superAdminRole = Role::query()->create([
-        'name' => 'Super Admin',
-        'guard_name' => 'web',
-    ]);
-
-    $adminRole = Role::query()->create([
-        'name' => 'Admin',
-        'guard_name' => 'web',
-    ]);
-
-    $partnerRole = Role::query()->create([
-        'name' => 'Partner',
-        'guard_name' => 'web',
-    ]);
-
     $adminRecipient = User::factory()->create();
-    $adminRecipient->assignRole($adminRole);
+    $adminRecipient->assignRole('Admin');
 
     $partnerRecipient = User::factory()->create();
-    $partnerRecipient->assignRole($partnerRole);
+    $partnerRecipient->assignRole('Partner');
 
     $actor = User::factory()->create();
-    $actor->assignRole($partnerRole);
+    $actor->assignRole('Partner');
 
     Sanctum::actingAs($actor);
 
@@ -80,7 +69,7 @@ it('sends meal crud notifications to admin and partner users', function (): void
     expect(Notification::query()->where('user_id', $actor->id)->where('type', 'meal_created')->count())->toBe(0);
 
     $superAdmin = User::factory()->create();
-    $superAdmin->assignRole($superAdminRole);
+    $superAdmin->assignRole('Super Admin');
 
     Sanctum::actingAs($superAdmin);
 
@@ -91,13 +80,8 @@ it('sends meal crud notifications to admin and partner users', function (): void
 });
 
 it('restricts redis cache clear endpoint to super admin', function (): void {
-    $adminRole = Role::query()->create([
-        'name' => 'Admin',
-        'guard_name' => 'web',
-    ]);
-
     $admin = User::factory()->create();
-    $admin->assignRole($adminRole);
+    $admin->assignRole('Admin');
 
     Sanctum::actingAs($admin);
 

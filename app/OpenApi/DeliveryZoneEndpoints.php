@@ -17,7 +17,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Delivery zones fetched successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_DELIVERY_ZONES),
     ]
 )]
 #[OA\Post(
@@ -46,7 +46,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 201, description: 'Delivery zone created successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_DELIVERY_ZONES),
         new OA\Response(response: 422, description: 'Validation failed'),
     ]
 )]
@@ -62,7 +62,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Delivery zone fetched successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_DELIVERY_ZONES),
         new OA\Response(response: 404, description: 'Not found'),
     ]
 )]
@@ -94,7 +94,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Delivery zone updated successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_DELIVERY_ZONES),
         new OA\Response(response: 422, description: 'Validation failed'),
     ]
 )]
@@ -111,7 +111,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Delivery zone deleted successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_DELIVERY_ZONES),
     ]
 )]
 #[OA\Get(
@@ -129,6 +129,4 @@ use OpenApi\Attributes as OA;
         new OA\Response(response: 422, description: 'Validation failed'),
     ]
 )]
-class DeliveryZoneEndpoints
-{
-}
+class DeliveryZoneEndpoints {}

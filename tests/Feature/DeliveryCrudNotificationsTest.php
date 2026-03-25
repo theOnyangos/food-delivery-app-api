@@ -1,12 +1,16 @@
 <?php
 
 use App\Models\DeliveryZone;
-use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function (): void {
+    $this->seed(RolesAndPermissionsSeeder::class);
+});
 
 it('sends notifications to admin and super admin for delivery zone crud actions', function (): void {
     [$superAdmin, $admin, $actor] = createAdminAndSuperAdminRecipients();
@@ -61,6 +65,7 @@ it('sends notifications to admin and super admin for delivery zone crud actions'
 it('sends notifications to admin and super admin for delivery address crud actions', function (): void {
     [$superAdmin, $admin] = createAdminAndSuperAdminRecipients();
     $customer = User::factory()->create();
+    $customer->assignRole('Customer');
 
     $zone = DeliveryZone::query()->create([
         'name' => 'Westlands',
@@ -123,23 +128,13 @@ it('sends notifications to admin and super admin for delivery address crud actio
 
 function createAdminAndSuperAdminRecipients(): array
 {
-    $superAdminRole = Role::query()->create([
-        'name' => 'Super Admin',
-        'guard_name' => 'web',
-    ]);
-
-    $adminRole = Role::query()->create([
-        'name' => 'Admin',
-        'guard_name' => 'web',
-    ]);
-
     $superAdmin = User::factory()->create();
     $admin = User::factory()->create();
     $actor = User::factory()->create();
 
-    $superAdmin->assignRole($superAdminRole);
-    $admin->assignRole($adminRole);
-    $actor->assignRole($adminRole);
+    $superAdmin->assignRole('Super Admin');
+    $admin->assignRole('Admin');
+    $actor->assignRole('Admin');
 
     return [$superAdmin, $admin, $actor];
 }

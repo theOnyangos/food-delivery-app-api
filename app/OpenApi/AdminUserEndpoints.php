@@ -13,7 +13,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Roles fetched successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_USERS),
     ]
 )]
 #[OA\Get(
@@ -28,7 +28,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Users fetched successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_USERS),
     ]
 )]
 #[OA\Post(
@@ -63,7 +63,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 201, description: 'User created; invite email queued'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_USERS),
         new OA\Response(response: 422, description: 'Validation error'),
         new OA\Response(response: 429, description: 'Too many requests'),
     ]
@@ -80,7 +80,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Invite email queued'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_USERS),
         new OA\Response(response: 422, description: 'Account already verified'),
         new OA\Response(response: 429, description: 'Too many requests'),
     ]

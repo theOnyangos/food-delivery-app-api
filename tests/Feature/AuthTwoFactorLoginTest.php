@@ -1,24 +1,21 @@
 <?php
 
-use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 
 uses(RefreshDatabase::class);
 
 it('returns otp challenge and then logs in successfully after otp verification', function (): void {
-    $role = Role::query()->create([
-        'name' => 'Customer',
-        'guard_name' => 'web',
-    ]);
+    $this->seed(RolesAndPermissionsSeeder::class);
 
     $user = User::factory()->create([
         'password' => Hash::make('password123'),
         'email_verified_at' => now(),
         'two_factor_secret' => Hash::make('123456'),
     ]);
-    $user->assignRole($role);
+    $user->assignRole('Customer');
 
     $loginResponse = $this->postJson('/api/auth/login', [
         'email' => $user->email,

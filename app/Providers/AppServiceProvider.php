@@ -9,10 +9,13 @@ use App\Listeners\CreateRegistrationNotification;
 use App\Listeners\SendPasswordResetLinkListener;
 use App\Listeners\SendVerificationNotification;
 use App\Listeners\SendWelcomeNotification;
+use App\Models\Blog;
+use App\Models\BlogCategory;
 use App\Models\PersonalAccessToken;
 use App\Services\RedisService;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
 
@@ -48,5 +51,19 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(UserRegistered::class, SendVerificationNotification::class);
         Event::listen(UserRegistered::class, CreateRegistrationNotification::class);
         Event::listen(UserEmailVerified::class, SendWelcomeNotification::class);
+
+        Route::bind('blog', function (string $value): Blog {
+            return Blog::query()
+                ->where('slug', $value)
+                ->orWhere('id', $value)
+                ->firstOrFail();
+        });
+
+        Route::bind('blog_category', function (string $value): BlogCategory {
+            return BlogCategory::query()
+                ->where('slug', $value)
+                ->orWhere('id', $value)
+                ->firstOrFail();
+        });
     }
 }

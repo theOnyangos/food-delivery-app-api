@@ -1,12 +1,16 @@
 <?php
 
 use App\Models\Notification;
-use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function (): void {
+    $this->seed(RolesAndPermissionsSeeder::class);
+});
 
 it('requires authentication for notifications datatable', function (): void {
     $response = $this->getJson('/api/notifications/datatable?draw=1&start=0&length=10');
@@ -29,11 +33,7 @@ it('returns 403 for authenticated user without required role or permission', fun
 
 it('returns yajra datatable payload for authorized user', function (): void {
     $user = User::factory()->create();
-    $adminRole = Role::query()->create([
-        'name' => 'Admin',
-        'guard_name' => 'web',
-    ]);
-    $user->assignRole($adminRole);
+    $user->assignRole('Admin');
 
     Notification::query()->create([
         'user_id' => $user->id,

@@ -2,21 +2,20 @@
 
 use App\Models\Meal;
 use App\Models\MealCategory;
-use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
-it('allows partner to create, update and delete their own meal', function (): void {
-    $partnerRole = Role::query()->create([
-        'name' => 'Partner',
-        'guard_name' => 'web',
-    ]);
+beforeEach(function (): void {
+    $this->seed(RolesAndPermissionsSeeder::class);
+});
 
+it('allows partner to create, update and delete their own meal', function (): void {
     $partner = User::factory()->create();
-    $partner->assignRole($partnerRole);
+    $partner->assignRole('Partner');
 
     $category = MealCategory::query()->create([
         'title' => 'Lunch',
@@ -106,16 +105,11 @@ it('allows partner to create, update and delete their own meal', function (): vo
 });
 
 it('prevents partner from managing another partners meal', function (): void {
-    $partnerRole = Role::query()->create([
-        'name' => 'Partner',
-        'guard_name' => 'web',
-    ]);
-
     $owner = User::factory()->create();
-    $owner->assignRole($partnerRole);
+    $owner->assignRole('Partner');
 
     $otherPartner = User::factory()->create();
-    $otherPartner->assignRole($partnerRole);
+    $otherPartner->assignRole('Partner');
 
     $meal = Meal::factory()->create([
         'user_id' => $owner->id,
@@ -139,4 +133,14 @@ it('requires authentication for meal management endpoints', function (): void {
     $response->assertStatus(401)
         ->assertJsonPath('success', false)
         ->assertJsonPath('message', 'Unauthenticated.');
+});
+
+it('returns 403 for customer without manage meals on my-meals', function (): void {
+    $user = User::factory()->create();
+    $user->assignRole('Customer');
+    Sanctum::actingAs($user);
+
+    $this->getJson('/api/my-meals')
+        ->assertStatus(403)
+        ->assertJsonPath('success', false);
 });

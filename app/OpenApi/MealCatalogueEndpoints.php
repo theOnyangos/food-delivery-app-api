@@ -39,7 +39,7 @@ use OpenApi\Attributes as OA;
     path: '/api/my-meals',
     operationId: 'listMyMeals',
     tags: ['Meals'],
-    summary: 'List meals manageable by current Admin/Partner',
+    summary: 'List meals manageable by current user (requires manage meals or Super Admin/Admin/Partner)',
     security: [['sanctum' => []]],
     parameters: [
         new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['draft', 'published', 'archived'])),
@@ -47,14 +47,14 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Manageable meals fetched successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_MEALS),
     ]
 )]
 #[OA\Post(
     path: '/api/my-meals',
     operationId: 'createMyMeal',
     tags: ['Meals'],
-    summary: 'Create a meal for current Admin/Partner',
+    summary: 'Create a meal (requires manage meals or Super Admin/Admin/Partner)',
     description: 'Creates a meal with optional nested nutrition, allergens, ingredients, recipes, steps, and tutorials.',
     security: [['sanctum' => []]],
     requestBody: new OA\RequestBody(
@@ -81,7 +81,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 201, description: 'Meal created successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_MEALS),
         new OA\Response(response: 422, description: 'Validation failed'),
     ]
 )]
@@ -97,7 +97,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Meal fetched successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_MEALS),
     ]
 )]
 #[OA\Put(
@@ -125,7 +125,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Meal updated successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_MEALS),
         new OA\Response(response: 422, description: 'Validation failed'),
     ]
 )]
@@ -141,7 +141,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Meal deleted successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_MEALS),
     ]
 )]
 #[OA\Put(
@@ -168,7 +168,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Meal nutrition updated successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_MEALS),
         new OA\Response(response: 422, description: 'Validation failed'),
     ]
 )]
@@ -204,7 +204,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Meal allergens updated successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_MEALS),
         new OA\Response(response: 422, description: 'Validation failed'),
     ]
 )]
@@ -240,7 +240,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Meal ingredients updated successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_MEALS),
         new OA\Response(response: 422, description: 'Validation failed'),
     ]
 )]
@@ -266,7 +266,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Meal recipes updated successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_MEALS),
         new OA\Response(response: 422, description: 'Validation failed'),
     ]
 )]
@@ -292,7 +292,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Meal tutorials updated successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_MEALS),
         new OA\Response(response: 422, description: 'Validation failed'),
     ]
 )]
@@ -305,7 +305,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Redis cache cleared successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_SUPER_ADMIN_ONLY),
     ]
 )]
 #[OA\Get(
@@ -338,7 +338,7 @@ use OpenApi\Attributes as OA;
     path: '/api/meal-categories',
     operationId: 'createMealCategory',
     tags: ['Meal Categories'],
-    summary: 'Create meal category (Admin)',
+    summary: 'Create meal category (requires manage meal categories)',
     security: [['sanctum' => []]],
     requestBody: new OA\RequestBody(
         required: true,
@@ -356,7 +356,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 201, description: 'Meal category created successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_MEAL_CATEGORIES),
         new OA\Response(response: 422, description: 'Validation failed'),
     ]
 )]
@@ -364,7 +364,7 @@ use OpenApi\Attributes as OA;
     path: '/api/meal-categories/{mealCategory}',
     operationId: 'updateMealCategory',
     tags: ['Meal Categories'],
-    summary: 'Update meal category (Admin)',
+    summary: 'Update meal category (requires manage meal categories)',
     security: [['sanctum' => []]],
     parameters: [
         new OA\Parameter(name: 'mealCategory', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
@@ -384,7 +384,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Meal category updated successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_MEAL_CATEGORIES),
         new OA\Response(response: 422, description: 'Validation failed'),
     ]
 )]
@@ -392,7 +392,7 @@ use OpenApi\Attributes as OA;
     path: '/api/meal-categories/{mealCategory}',
     operationId: 'deleteMealCategory',
     tags: ['Meal Categories'],
-    summary: 'Delete meal category (Admin)',
+    summary: 'Delete meal category (requires manage meal categories)',
     security: [['sanctum' => []]],
     parameters: [
         new OA\Parameter(name: 'mealCategory', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
@@ -400,7 +400,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Meal category deleted successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_MEAL_CATEGORIES),
     ]
 )]
 class MealCatalogueEndpoints {}

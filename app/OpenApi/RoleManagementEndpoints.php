@@ -13,7 +13,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Roles fetched successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_ROLES),
     ]
 )]
 #[OA\Get(
@@ -25,7 +25,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Roles fetched successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_ROLES),
     ]
 )]
 #[OA\Post(
@@ -47,7 +47,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 201, description: 'Role created successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_ROLES),
         new OA\Response(response: 422, description: 'Validation error'),
     ]
 )]
@@ -63,7 +63,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Role fetched successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_ROLES),
         new OA\Response(response: 404, description: 'Role not found'),
     ]
 )]
@@ -89,7 +89,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Role updated successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_ROLES),
         new OA\Response(response: 422, description: 'Validation error'),
     ]
 )]
@@ -105,7 +105,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Role deleted successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_ROLES),
     ]
 )]
 #[OA\Put(
@@ -129,7 +129,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Permissions synced successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_ROLES),
         new OA\Response(response: 422, description: 'Validation error'),
     ]
 )]
@@ -142,7 +142,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Permissions fetched successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_ROLES),
     ]
 )]
 #[OA\Put(
@@ -166,10 +166,8 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'User roles updated successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_ROLES),
         new OA\Response(response: 422, description: 'Validation error'),
     ]
 )]
-class RoleManagementEndpoints
-{
-}
+class RoleManagementEndpoints {}

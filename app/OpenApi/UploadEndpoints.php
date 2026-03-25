@@ -28,7 +28,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 201, description: 'Image uploaded successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_UPLOADS),
     ]
 )]
 #[OA\Post(
@@ -55,7 +55,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 201, description: 'Public asset uploaded successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_UPLOADS),
     ]
 )]
 #[OA\Post(
@@ -80,7 +80,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 201, description: 'File uploaded successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_UPLOADS),
     ]
 )]
 #[OA\Get(
@@ -95,7 +95,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Signed URL generated'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_UPLOADS),
         new OA\Response(response: 404, description: 'Not found'),
     ]
 )]
@@ -111,7 +111,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'File deleted successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_UPLOADS),
         new OA\Response(response: 404, description: 'Not found'),
     ]
 )]
@@ -152,6 +152,4 @@ use OpenApi\Attributes as OA;
         new OA\Response(response: 404, description: 'Not found'),
     ]
 )]
-class UploadEndpoints
-{
-}
+class UploadEndpoints {}

@@ -21,7 +21,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage users permission or Super Admin role"
                     }
                 },
                 "security": [
@@ -57,7 +57,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage users permission or Super Admin role"
                     }
                 },
                 "security": [
@@ -129,7 +129,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage users permission or Super Admin role"
                     },
                     "422": {
                         "description": "Validation error"
@@ -171,13 +171,860 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage users permission or Super Admin role"
                     },
                     "422": {
                         "description": "Account already verified"
                     },
                     "429": {
                         "description": "Too many requests"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/ai/chat": {
+            "post": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "Send a message to the AI assistant",
+                "operationId": "aiChat",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "message"
+                                ],
+                                "properties": {
+                                    "message": {
+                                        "type": "string"
+                                    },
+                                    "conversation_id": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Validation or AI error"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires use ai chat permission or Super Admin, Admin, or Partner role"
+                    },
+                    "429": {
+                        "description": "Daily limit or rate limit"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/ai/conversations": {
+            "get": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "List conversations for the current user",
+                "operationId": "aiConversationsList",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "active"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires use ai chat permission or Super Admin, Admin, or Partner role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/ai/conversations/{id}": {
+            "get": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "Get one conversation with messages",
+                "operationId": "aiConversationShow",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires use ai chat permission or Super Admin, Admin, or Partner role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "Archive a conversation",
+                "operationId": "aiConversationDelete",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Archived"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires use ai chat permission or Super Admin, Admin, or Partner role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/ai/conversations/{id}/regenerate": {
+            "post": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "Regenerate the last assistant reply",
+                "operationId": "aiConversationRegenerate",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Cannot regenerate"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires use ai chat permission or Super Admin, Admin, or Partner role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/ai/assistant/chat": {
+            "post": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "Assistant chat with KB + app context (daily limit applies)",
+                "operationId": "aiAssistantChat",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "message"
+                                ],
+                                "properties": {
+                                    "message": {
+                                        "type": "string"
+                                    },
+                                    "conversation_id": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Validation or AI error"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires use ai chat permission or Super Admin, Admin, or Partner role"
+                    },
+                    "429": {
+                        "description": "Daily limit"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/ai/assistant/conversations": {
+            "get": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "List conversations for assistant (customer-type) chat",
+                "operationId": "aiAssistantConversationsList",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires use ai chat permission or Super Admin, Admin, or Partner role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/ai/assistant/conversations/{id}": {
+            "get": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "Get one assistant conversation",
+                "operationId": "aiAssistantConversationShow",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires use ai chat permission or Super Admin, Admin, or Partner role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "Archive an assistant conversation",
+                "operationId": "aiAssistantConversationDelete",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Archived"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires use ai chat permission or Super Admin, Admin, or Partner role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/ai-agent/config": {
+            "get": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "Get AI agent settings (API key masked)",
+                "operationId": "adminAiAgentConfigShow",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage ai agent permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "Update AI agent settings",
+                "operationId": "adminAiAgentConfigUpdate",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "default_model": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "enabled": {
+                                        "type": "boolean",
+                                        "nullable": true
+                                    },
+                                    "daily_limit_customer": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "daily_limit_admin": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "max_tokens": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "temperature": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "nullable": true
+                                    },
+                                    "system_prompts": {
+                                        "type": "object",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage ai agent permission"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/ai-agent/openai/models": {
+            "get": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "List OpenAI models",
+                "operationId": "adminAiAgentOpenaiModels",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "API key not configured"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage ai agent permission"
+                    },
+                    "500": {
+                        "description": "OpenAI error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/ai-agent/openai/assistants": {
+            "get": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "List OpenAI assistants",
+                "operationId": "adminAiAgentOpenaiAssistants",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "API key not configured"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage ai agent permission"
+                    },
+                    "500": {
+                        "description": "OpenAI error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/ai-agent/conversations/stats": {
+            "get": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "AI conversation usage stats",
+                "operationId": "adminAiAgentConversationsStats",
+                "parameters": [
+                    {
+                        "name": "days",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 30
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage ai agent permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/ai-agent/conversations": {
+            "get": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "List all conversations (admin)",
+                "operationId": "adminAiAgentConversationsIndex",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage ai agent permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/ai-agent/conversations/{id}": {
+            "get": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "Get one conversation with messages (admin)",
+                "operationId": "adminAiAgentConversationsShow",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage ai agent permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/ai-agent/kb/sources": {
+            "get": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "List KB sources",
+                "operationId": "adminAiAgentKbSourcesIndex",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage ai agent permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "Create KB source",
+                "operationId": "adminAiAgentKbSourcesStore",
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage ai agent permission"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/ai-agent/kb/ingest-all": {
+            "post": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "Ingest all KB sources",
+                "operationId": "adminAiAgentKbIngestAll",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage ai agent permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/ai-agent/kb/sources/{id}": {
+            "get": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "Get one KB source",
+                "operationId": "adminAiAgentKbSourcesShow",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage ai agent permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "Update KB source",
+                "operationId": "adminAiAgentKbSourcesUpdate",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage ai agent permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "Delete KB source",
+                "operationId": "adminAiAgentKbSourcesDestroy",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage ai agent permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/ai-agent/kb/sources/{id}/ingest": {
+            "post": {
+                "tags": [
+                    "AI Agent"
+                ],
+                "summary": "Ingest one KB source",
+                "operationId": "adminAiAgentKbSourcesIngest",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Ingest failed"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage ai agent permission"
                     }
                 },
                 "security": [
@@ -669,12 +1516,712 @@
                 ]
             }
         },
+        "/api/blog/categories": {
+            "get": {
+                "tags": [
+                    "Blog"
+                ],
+                "summary": "List blog categories (public, cached)",
+                "operationId": "publicBlogCategories",
+                "responses": {
+                    "200": {
+                        "description": "Categories list"
+                    }
+                }
+            }
+        },
+        "/api/blogs/recent": {
+            "get": {
+                "tags": [
+                    "Blog"
+                ],
+                "summary": "Recent published posts (public, cached)",
+                "operationId": "publicBlogsRecent",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 24
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Recent blogs"
+                    }
+                }
+            }
+        },
+        "/api/blogs": {
+            "get": {
+                "tags": [
+                    "Blog"
+                ],
+                "summary": "Paginated published blogs (public, cached)",
+                "operationId": "publicBlogsIndex",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated blogs"
+                    }
+                }
+            }
+        },
+        "/api/blogs/{slugOrId}": {
+            "get": {
+                "tags": [
+                    "Blog"
+                ],
+                "summary": "Single published blog by slug or UUID (public, cached)",
+                "operationId": "publicBlogShow",
+                "parameters": [
+                    {
+                        "name": "slugOrId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Blog detail"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/api/admin/blog/categories": {
+            "get": {
+                "tags": [
+                    "Blog"
+                ],
+                "summary": "Blog categories (DataTables)",
+                "operationId": "adminBlogCategoriesDataTables",
+                "responses": {
+                    "200": {
+                        "description": "DataTables JSON"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage content permission or Super Admin or Admin role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Blog"
+                ],
+                "summary": "Create blog category",
+                "operationId": "adminBlogCategoryStore",
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage content permission or Super Admin or Admin role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/blogs": {
+            "get": {
+                "tags": [
+                    "Blog"
+                ],
+                "summary": "Blogs (DataTables)",
+                "operationId": "adminBlogsDataTables",
+                "responses": {
+                    "200": {
+                        "description": "DataTables JSON"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage content permission or Super Admin or Admin role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Blog"
+                ],
+                "summary": "Create blog post",
+                "operationId": "adminBlogStore",
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage content permission or Super Admin or Admin role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/chat/settings": {
+            "get": {
+                "tags": [
+                    "Live chat"
+                ],
+                "summary": "Get chat working-hours settings (manage chat)",
+                "operationId": "chatSettingsGet",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage chat permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Live chat"
+                ],
+                "summary": "Update chat settings (manage chat)",
+                "operationId": "chatSettingsPut",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Validation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage chat permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/chat/support-allocations": {
+            "get": {
+                "tags": [
+                    "Live chat"
+                ],
+                "summary": "List support allocations (manage chat)",
+                "operationId": "chatSupportAllocationsIndex",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage chat permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Live chat"
+                ],
+                "summary": "Create support allocation (manage chat)",
+                "operationId": "chatSupportAllocationsStore",
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage chat permission"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/chat/support-allocations/{id}": {
+            "delete": {
+                "tags": [
+                    "Live chat"
+                ],
+                "summary": "Remove support allocation (manage chat)",
+                "operationId": "chatSupportAllocationsDestroy",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage chat permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/chat/vendor-users": {
+            "get": {
+                "tags": [
+                    "Live chat"
+                ],
+                "summary": "List partner users eligible for chat (staff, manage chat)",
+                "operationId": "chatVendorUsersIndex",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage chat permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/chat/conversations": {
+            "get": {
+                "tags": [
+                    "Live chat"
+                ],
+                "summary": "List conversations for current user",
+                "operationId": "chatConversationsIndex",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires use live chat or manage chat permission or Super Admin, Admin, Partner, or Customer role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Live chat"
+                ],
+                "summary": "Create or get conversation (partner or staff with vendor_user_id)",
+                "operationId": "chatConversationsStore",
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Business rule"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires use live chat or manage chat permission or Super Admin, Admin, Partner, or Customer role"
+                    },
+                    "422": {
+                        "description": "Validation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/chat/conversations/{id}": {
+            "get": {
+                "tags": [
+                    "Live chat"
+                ],
+                "summary": "Get conversation with first page of messages",
+                "operationId": "chatConversationsShow",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires use live chat or manage chat permission or Super Admin, Admin, Partner, or Customer role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Live chat"
+                ],
+                "summary": "Delete conversation (manage chat)",
+                "operationId": "chatConversationsDestroy",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage chat permission"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/chat/conversations/{conversationId}/messages": {
+            "get": {
+                "tags": [
+                    "Live chat"
+                ],
+                "summary": "Paginate messages",
+                "operationId": "chatMessagesIndex",
+                "parameters": [
+                    {
+                        "name": "conversationId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires use live chat or manage chat permission or Super Admin, Admin, Partner, or Customer role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Live chat"
+                ],
+                "summary": "Send a message (broadcasts message.sent on private channel)",
+                "operationId": "chatMessagesStore",
+                "parameters": [
+                    {
+                        "name": "conversationId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Outside hours or validation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires use live chat or manage chat permission or Super Admin, Admin, Partner, or Customer role"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/chat/conversations/{conversationId}/read": {
+            "patch": {
+                "tags": [
+                    "Live chat"
+                ],
+                "summary": "Mark conversation read",
+                "operationId": "chatConversationsMarkRead",
+                "parameters": [
+                    {
+                        "name": "conversationId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires use live chat or manage chat permission or Super Admin, Admin, Partner, or Customer role"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/chat/conversations/{conversationId}/attachments/{mediaId}/serve-url": {
+            "get": {
+                "tags": [
+                    "Live chat"
+                ],
+                "summary": "Get temporary signed URL for an attachment",
+                "operationId": "chatAttachmentServeUrl",
+                "parameters": [
+                    {
+                        "name": "conversationId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "mediaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires use live chat or manage chat permission or Super Admin, Admin, Partner, or Customer role"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/chat/conversations/{conversationId}/typing": {
+            "post": {
+                "tags": [
+                    "Live chat"
+                ],
+                "summary": "Broadcast typing indicator (user.typing)",
+                "operationId": "chatTypingStore",
+                "parameters": [
+                    {
+                        "name": "conversationId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires use live chat or manage chat permission or Super Admin, Admin, Partner, or Customer role"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/delivery-addresses": {
             "get": {
                 "tags": [
                     "Delivery Addresses"
                 ],
-                "summary": "List authenticated user delivery addresses",
+                "summary": "List authenticated user delivery addresses (requires manage delivery addresses or staff/customer roles)",
                 "operationId": "listDeliveryAddresses",
                 "responses": {
                     "200": {
@@ -682,6 +2229,9 @@
                     },
                     "401": {
                         "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage delivery addresses permission or Super Admin, Admin, Partner, or Customer role"
                     }
                 },
                 "security": [
@@ -769,6 +2319,9 @@
                     "401": {
                         "description": "Unauthenticated"
                     },
+                    "403": {
+                        "description": "Forbidden — requires manage delivery addresses permission or Super Admin, Admin, Partner, or Customer role"
+                    },
                     "422": {
                         "description": "Validation failed"
                     }
@@ -806,7 +2359,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage delivery addresses permission or Super Admin, Admin, Partner, or Customer role"
                     },
                     "404": {
                         "description": "Not found"
@@ -902,7 +2455,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage delivery addresses permission or Super Admin, Admin, Partner, or Customer role"
                     },
                     "422": {
                         "description": "Validation failed"
@@ -940,7 +2493,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage delivery addresses permission or Super Admin, Admin, Partner, or Customer role"
                     }
                 },
                 "security": [
@@ -987,7 +2540,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage delivery zones permission"
                     }
                 },
                 "security": [
@@ -1063,7 +2616,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage delivery zones permission"
                     },
                     "422": {
                         "description": "Validation failed"
@@ -1102,7 +2655,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage delivery zones permission"
                     },
                     "404": {
                         "description": "Not found"
@@ -1187,7 +2740,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage delivery zones permission"
                     },
                     "422": {
                         "description": "Validation failed"
@@ -1225,7 +2778,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage delivery zones permission"
                     }
                 },
                 "security": [
@@ -1353,7 +2906,7 @@
                 "tags": [
                     "Meals"
                 ],
-                "summary": "List meals manageable by current Admin/Partner",
+                "summary": "List meals manageable by current user (requires manage meals or Super Admin/Admin/Partner)",
                 "operationId": "listMyMeals",
                 "parameters": [
                     {
@@ -1378,7 +2931,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage meals permission or Super Admin, Admin, or Partner role"
                     }
                 },
                 "security": [
@@ -1391,7 +2944,7 @@
                 "tags": [
                     "Meals"
                 ],
-                "summary": "Create a meal for current Admin/Partner",
+                "summary": "Create a meal (requires manage meals or Super Admin/Admin/Partner)",
                 "description": "Creates a meal with optional nested nutrition, allergens, ingredients, recipes, steps, and tutorials.",
                 "operationId": "createMyMeal",
                 "requestBody": {
@@ -1485,7 +3038,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage meals permission or Super Admin, Admin, or Partner role"
                     },
                     "422": {
                         "description": "Validation failed"
@@ -1524,7 +3077,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage meals permission or Super Admin, Admin, or Partner role"
                     }
                 },
                 "security": [
@@ -1596,7 +3149,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage meals permission or Super Admin, Admin, or Partner role"
                     },
                     "422": {
                         "description": "Validation failed"
@@ -1633,7 +3186,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage meals permission or Super Admin, Admin, or Partner role"
                     }
                 },
                 "security": [
@@ -1703,7 +3256,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage meals permission or Super Admin, Admin, or Partner role"
                     },
                     "422": {
                         "description": "Validation failed"
@@ -1772,7 +3325,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage meals permission or Super Admin, Admin, or Partner role"
                     },
                     "422": {
                         "description": "Validation failed"
@@ -1844,7 +3397,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage meals permission or Super Admin, Admin, or Partner role"
                     },
                     "422": {
                         "description": "Validation failed"
@@ -1904,7 +3457,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage meals permission or Super Admin, Admin, or Partner role"
                     },
                     "422": {
                         "description": "Validation failed"
@@ -1964,7 +3517,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage meals permission or Super Admin, Admin, or Partner role"
                     },
                     "422": {
                         "description": "Validation failed"
@@ -1992,7 +3545,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires Super Admin role"
                     }
                 },
                 "security": [
@@ -2027,7 +3580,7 @@
                 "tags": [
                     "Meal Categories"
                 ],
-                "summary": "Create meal category (Admin)",
+                "summary": "Create meal category (requires manage meal categories)",
                 "operationId": "createMealCategory",
                 "requestBody": {
                     "required": true,
@@ -2068,7 +3621,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage meal categories permission"
                     },
                     "422": {
                         "description": "Validation failed"
@@ -2120,7 +3673,7 @@
                 "tags": [
                     "Meal Categories"
                 ],
-                "summary": "Update meal category (Admin)",
+                "summary": "Update meal category (requires manage meal categories)",
                 "operationId": "updateMealCategory",
                 "parameters": [
                     {
@@ -2169,7 +3722,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage meal categories permission"
                     },
                     "422": {
                         "description": "Validation failed"
@@ -2185,7 +3738,7 @@
                 "tags": [
                     "Meal Categories"
                 ],
-                "summary": "Delete meal category (Admin)",
+                "summary": "Delete meal category (requires manage meal categories)",
                 "operationId": "deleteMealCategory",
                 "parameters": [
                     {
@@ -2206,7 +3759,288 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage meal categories permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/newsletter/subscribe": {
+            "post": {
+                "tags": [
+                    "Newsletter"
+                ],
+                "summary": "Subscribe to newsletter (public, no auth)",
+                "operationId": "newsletterSubscribe",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "reader@example.com"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Jane",
+                                        "nullable": true
+                                    },
+                                    "source": {
+                                        "type": "string",
+                                        "example": "landing",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Subscribed successfully"
+                    },
+                    "200": {
+                        "description": "Already subscribed"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/api/admin/newsletter/send": {
+            "post": {
+                "tags": [
+                    "Newsletter"
+                ],
+                "summary": "Queue newsletter email to all subscribed addresses (requires manage newsletter)",
+                "operationId": "adminNewsletterSend",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "subject",
+                                    "body"
+                                ],
+                                "properties": {
+                                    "subject": {
+                                        "type": "string",
+                                        "example": "Monthly update"
+                                    },
+                                    "body": {
+                                        "type": "string",
+                                        "format": "html",
+                                        "example": "<p>Hello!</p>"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "202": {
+                        "description": "Send queued"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage newsletter permission (Super Admin only)"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/newsletter/subscribers": {
+            "get": {
+                "tags": [
+                    "Newsletter"
+                ],
+                "summary": "List subscribers (Yajra DataTables; requires manage newsletter)",
+                "operationId": "adminNewsletterSubscribersIndex",
+                "parameters": [
+                    {
+                        "name": "draw",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "start",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "length",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "subscribed",
+                                "unsubscribed"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "DataTables JSON"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage newsletter permission (Super Admin only)"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/newsletter/subscribers/{subscriber}": {
+            "get": {
+                "tags": [
+                    "Newsletter"
+                ],
+                "summary": "Show one subscriber (requires manage newsletter)",
+                "operationId": "adminNewsletterSubscriberShow",
+                "parameters": [
+                    {
+                        "name": "subscriber",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Subscriber fetched"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage newsletter permission (Super Admin only)"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Newsletter"
+                ],
+                "summary": "Delete subscriber (requires manage newsletter)",
+                "operationId": "adminNewsletterSubscriberDestroy",
+                "parameters": [
+                    {
+                        "name": "subscriber",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage newsletter permission (Super Admin only)"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/newsletter/subscribers/{subscriber}/unsubscribe": {
+            "patch": {
+                "tags": [
+                    "Newsletter"
+                ],
+                "summary": "Mark subscriber as unsubscribed (requires manage newsletter)",
+                "operationId": "adminNewsletterSubscriberUnsubscribe",
+                "parameters": [
+                    {
+                        "name": "subscriber",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage newsletter permission (Super Admin only)"
+                    },
+                    "404": {
+                        "description": "Not found"
                     }
                 },
                 "security": [
@@ -2251,7 +4085,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires view notifications or manage notifications permission or Super Admin, Admin, or Partner role"
                     }
                 }
             }
@@ -2313,7 +4147,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires view notifications or manage notifications permission or Super Admin, Admin, or Partner role"
                     }
                 },
                 "security": [
@@ -2482,6 +4316,12 @@
                 "responses": {
                     "200": {
                         "description": "Unread notifications fetched successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires view notifications or manage notifications permission or Super Admin, Admin, or Partner role"
                     }
                 },
                 "security": [
@@ -2501,6 +4341,12 @@
                 "responses": {
                     "200": {
                         "description": "Unread count fetched successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires view notifications or manage notifications permission or Super Admin, Admin, or Partner role"
                     }
                 },
                 "security": [
@@ -2520,6 +4366,12 @@
                 "responses": {
                     "200": {
                         "description": "Notifications marked as read"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires view notifications or manage notifications permission or Super Admin, Admin, or Partner role"
                     }
                 },
                 "security": [
@@ -2551,8 +4403,11 @@
                     "200": {
                         "description": "Notification marked as read"
                     },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires view notifications or manage notifications permission or Super Admin, Admin, or Partner role"
                     }
                 },
                 "security": [
@@ -2584,8 +4439,11 @@
                     "200": {
                         "description": "Notification deleted successfully"
                     },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires view notifications or manage notifications permission or Super Admin, Admin, or Partner role"
                     }
                 },
                 "security": [
@@ -2605,6 +4463,408 @@
                 "responses": {
                     "200": {
                         "description": "Test notification created successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires view notifications or manage notifications permission or Super Admin, Admin, or Partner role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/meals/reviews": {
+            "get": {
+                "tags": [
+                    "Meal reviews"
+                ],
+                "summary": "Latest approved meal reviews (aggregate)",
+                "operationId": "listAllMealReviews",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 50
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Aggregate meal reviews"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/meals/{meal}/reviews": {
+            "get": {
+                "tags": [
+                    "Meal reviews"
+                ],
+                "summary": "Paginated approved reviews for a meal",
+                "operationId": "listMealReviews",
+                "parameters": [
+                    {
+                        "name": "meal",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "topic_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "rating",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 5,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated reviews"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Meal not published or not visible"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Meal reviews"
+                ],
+                "summary": "Submit a review for a published meal",
+                "operationId": "createMealReview",
+                "parameters": [
+                    {
+                        "name": "meal",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "rating",
+                                    "message"
+                                ],
+                                "properties": {
+                                    "rating": {
+                                        "type": "integer",
+                                        "maximum": 5,
+                                        "minimum": 1
+                                    },
+                                    "message": {
+                                        "type": "string",
+                                        "maxLength": 2000
+                                    },
+                                    "category_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    },
+                                    "topic_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Review created"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation failed or meal not published"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/user/reviews": {
+            "get": {
+                "tags": [
+                    "Meal reviews"
+                ],
+                "summary": "List current user approved meal reviews",
+                "operationId": "listUserMealReviews",
+                "responses": {
+                    "200": {
+                        "description": "Paginated user reviews"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/user/reviews/{review}": {
+            "delete": {
+                "tags": [
+                    "Meal reviews"
+                ],
+                "summary": "Delete own meal review",
+                "operationId": "deleteUserMealReview",
+                "parameters": [
+                    {
+                        "name": "review",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/my-meals/{meal}/reviews": {
+            "get": {
+                "tags": [
+                    "Meal reviews"
+                ],
+                "summary": "Partner: list reviews for own meal",
+                "operationId": "listPartnerMealReviews",
+                "parameters": [
+                    {
+                        "name": "meal",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated reviews"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage meals permission or Super Admin, Admin, or Partner role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/review-categories": {
+            "get": {
+                "tags": [
+                    "Admin — meal reviews"
+                ],
+                "summary": "Review categories (DataTables)",
+                "operationId": "adminReviewCategoriesDataTables",
+                "responses": {
+                    "200": {
+                        "description": "DataTables JSON"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage review categories permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/review-categories/list": {
+            "get": {
+                "tags": [
+                    "Admin — meal reviews"
+                ],
+                "summary": "Ordered review categories for dropdowns",
+                "operationId": "adminReviewCategoriesList",
+                "responses": {
+                    "200": {
+                        "description": "Categories list"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage review categories permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/reviews": {
+            "get": {
+                "tags": [
+                    "Admin — meal reviews"
+                ],
+                "summary": "All reviews (DataTables)",
+                "operationId": "adminReviewsDataTables",
+                "responses": {
+                    "200": {
+                        "description": "DataTables JSON"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage reviews permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/reviews/{review}/status": {
+            "patch": {
+                "tags": [
+                    "Admin — meal reviews"
+                ],
+                "summary": "Update review moderation status",
+                "operationId": "adminReviewUpdateStatus",
+                "parameters": [
+                    {
+                        "name": "review",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "approved",
+                                            "pending",
+                                            "rejected"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage reviews permission"
+                    },
+                    "422": {
+                        "description": "Invalid status"
                     }
                 },
                 "security": [
@@ -2629,7 +4889,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage roles permission"
                     }
                 },
                 "security": [
@@ -2654,7 +4914,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage roles permission"
                     }
                 },
                 "security": [
@@ -2700,7 +4960,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage roles permission"
                     },
                     "422": {
                         "description": "Validation error"
@@ -2739,7 +4999,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage roles permission"
                     },
                     "404": {
                         "description": "Role not found"
@@ -2799,7 +5059,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage roles permission"
                     },
                     "422": {
                         "description": "Validation error"
@@ -2836,7 +5096,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage roles permission"
                     }
                 },
                 "security": [
@@ -2897,7 +5157,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage roles permission"
                     },
                     "422": {
                         "description": "Validation error"
@@ -2925,7 +5185,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage roles permission"
                     }
                 },
                 "security": [
@@ -2986,7 +5246,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage roles permission"
                     },
                     "422": {
                         "description": "Validation error"
@@ -3045,7 +5305,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage uploads permission or Super Admin, Admin, or Partner role"
                     }
                 },
                 "security": [
@@ -3101,7 +5361,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage uploads permission or Super Admin, Admin, or Partner role"
                     }
                 },
                 "security": [
@@ -3149,7 +5409,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage uploads permission or Super Admin, Admin, or Partner role"
                     }
                 },
                 "security": [
@@ -3185,7 +5445,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage uploads permission or Super Admin, Admin, or Partner role"
                     },
                     "404": {
                         "description": "Not found"
@@ -3224,7 +5484,7 @@
                         "description": "Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — requires manage uploads permission or Super Admin, Admin, or Partner role"
                     },
                     "404": {
                         "description": "Not found"
@@ -3341,6 +5601,22 @@
     },
     "tags": [
         {
+            "name": "AI Agent",
+            "description": "User AI chat (permission: use ai chat or staff/partner roles) and admin AI management (permission: manage ai agent)"
+        },
+        {
+            "name": "Blog",
+            "description": "Public blog listing and Super Admin/Admin content management"
+        },
+        {
+            "name": "Live chat",
+            "description": "Support chat (Reverb private channel chat.conversation.{id})"
+        },
+        {
+            "name": "Newsletter",
+            "description": "Public subscription and Super Admin newsletter management"
+        },
+        {
             "name": "Admin Users",
             "description": "Admin Users"
         },
@@ -3367,6 +5643,14 @@
         {
             "name": "Notifications",
             "description": "Notifications"
+        },
+        {
+            "name": "Meal reviews",
+            "description": "Meal reviews"
+        },
+        {
+            "name": "Admin — meal reviews",
+            "description": "Admin — meal reviews"
         },
         {
             "name": "Role Management",

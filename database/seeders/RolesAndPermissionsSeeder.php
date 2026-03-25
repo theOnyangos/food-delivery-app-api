@@ -6,6 +6,31 @@ use App\Models\Permission;
 use App\Models\Role;
 use Illuminate\Database\Seeder;
 
+/**
+ * Route → permission map (middleware in routes/api.php):
+ *
+ * - uploads: manage uploads (+ Super Admin|Admin|Partner via role_or_permission)
+ * - admin roles, permissions, user role sync: manage roles
+ * - admin users (list, invite, role-options): manage users
+ * - notifications (datatable, unread, etc.): view notifications | manage notifications
+ * - chat (staff): manage chat
+ * - chat (participants): use live chat
+ * - admin delivery zones CRUD: manage delivery zones
+ * - delivery addresses CRUD: manage delivery addresses or listed roles; check-coverage is auth only
+ * - meals catalogue GET, meal-categories GET: auth only (no extra permission)
+ * - my-meals: manage meals
+ * - meal-categories POST/PUT/DELETE (admin): manage meal categories
+ * - admin/cache/redis/clear: Super Admin role only
+ * - ai routes: use ai chat
+ * - admin ai-agent: manage ai agent
+ * - POST /newsletter/subscribe: public (no auth)
+ * - POST /admin/newsletter/send, GET/PATCH/DELETE /admin/newsletter/subscribers*: auth:sanctum + role_or_permission:Super Admin|manage newsletter + permission:manage newsletter (only Super Admin holds manage newsletter; Admin role excluded)
+ * - admin/review-categories: manage review categories
+ * - admin/review-topics: manage review topics
+ * - admin/reviews: manage reviews
+ * - GET /blog/categories, /blogs/recent, /blogs, /blogs/{slugOrId}: public (no extra permission)
+ * - admin/blog/categories*, admin/blogs*: manage content (Super Admin + Admin; excluded from Partner/Customer)
+ */
 class RolesAndPermissionsSeeder extends Seeder
 {
     /**
@@ -25,6 +50,19 @@ class RolesAndPermissionsSeeder extends Seeder
             'manage user roles',
             'view notifications',
             'manage notifications',
+            'manage ai agent',
+            'use ai chat',
+            'manage chat',
+            'use live chat',
+            'manage meals',
+            'manage meal categories',
+            'manage delivery zones',
+            'manage delivery addresses',
+            'manage newsletter',
+            'manage review categories',
+            'manage review topics',
+            'manage reviews',
+            'manage content',
         ];
 
         foreach ($permissions as $permission) {
@@ -39,11 +77,23 @@ class RolesAndPermissionsSeeder extends Seeder
         $partner = Role::query()->firstOrCreate(['name' => 'Partner', 'guard_name' => $guard]);
         $customer = Role::query()->firstOrCreate(['name' => 'Customer', 'guard_name' => $guard]);
 
-        $allPermissions = Permission::query()->pluck('name')->all();
+        $superAdmin->syncPermissions(Permission::query()->get());
 
-        $superAdmin->syncPermissions($allPermissions);
-        $admin->syncPermissions(['view dashboard', 'manage users', 'manage uploads', 'view notifications', 'manage notifications']);
-        $partner->syncPermissions(['view dashboard', 'manage uploads', 'view notifications', 'manage notifications']);
-        $customer->syncPermissions([]);
+        $admin->syncPermissions(Permission::query()->whereNotIn('name', ['manage roles', 'manage newsletter'])->get());
+
+        $partner->syncPermissions(Permission::query()->whereIn('name', [
+            'view dashboard',
+            'manage uploads',
+            'manage meals',
+            'view notifications',
+            'manage notifications',
+            'use ai chat',
+            'use live chat',
+        ])->get());
+
+        $customer->syncPermissions(Permission::query()->whereIn('name', [
+            'manage delivery addresses',
+            'use live chat',
+        ])->get());
     }
 }

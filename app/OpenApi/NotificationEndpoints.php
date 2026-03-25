@@ -29,7 +29,7 @@ use OpenApi\Attributes as OA;
             )
         ),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_NOTIFICATIONS),
     ]
 )]
 #[OA\Get(
@@ -48,7 +48,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Notifications fetched successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_NOTIFICATIONS),
     ]
 )]
 #[OA\Get(
@@ -131,6 +131,8 @@ use OpenApi\Attributes as OA;
     security: [['sanctum' => []]],
     responses: [
         new OA\Response(response: 200, description: 'Unread notifications fetched successfully'),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_NOTIFICATIONS),
     ]
 )]
 #[OA\Get(
@@ -141,6 +143,8 @@ use OpenApi\Attributes as OA;
     security: [['sanctum' => []]],
     responses: [
         new OA\Response(response: 200, description: 'Unread count fetched successfully'),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_NOTIFICATIONS),
     ]
 )]
 #[OA\Post(
@@ -151,6 +155,8 @@ use OpenApi\Attributes as OA;
     security: [['sanctum' => []]],
     responses: [
         new OA\Response(response: 200, description: 'Notifications marked as read'),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_NOTIFICATIONS),
     ]
 )]
 #[OA\Post(
@@ -164,7 +170,8 @@ use OpenApi\Attributes as OA;
     ],
     responses: [
         new OA\Response(response: 200, description: 'Notification marked as read'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_NOTIFICATIONS),
     ]
 )]
 #[OA\Delete(
@@ -178,7 +185,8 @@ use OpenApi\Attributes as OA;
     ],
     responses: [
         new OA\Response(response: 200, description: 'Notification deleted successfully'),
-        new OA\Response(response: 403, description: 'Forbidden'),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_NOTIFICATIONS),
     ]
 )]
 #[OA\Post(
@@ -189,8 +197,8 @@ use OpenApi\Attributes as OA;
     security: [['sanctum' => []]],
     responses: [
         new OA\Response(response: 200, description: 'Test notification created successfully'),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_NOTIFICATIONS),
     ]
 )]
-class NotificationEndpoints
-{
-}
+class NotificationEndpoints {}

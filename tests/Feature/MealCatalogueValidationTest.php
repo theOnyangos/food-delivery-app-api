@@ -1,20 +1,19 @@
 <?php
 
-use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
-it('validates required meal fields and nested ingredient metadata shape', function (): void {
-    $partnerRole = Role::query()->create([
-        'name' => 'Partner',
-        'guard_name' => 'web',
-    ]);
+beforeEach(function (): void {
+    $this->seed(RolesAndPermissionsSeeder::class);
+});
 
+it('validates required meal fields and nested ingredient metadata shape', function (): void {
     $partner = User::factory()->create();
-    $partner->assignRole($partnerRole);
+    $partner->assignRole('Partner');
 
     Sanctum::actingAs($partner);
 
