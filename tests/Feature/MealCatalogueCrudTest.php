@@ -2,6 +2,7 @@
 
 use App\Models\Meal;
 use App\Models\MealCategory;
+use App\Models\MealNutrition;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -102,6 +103,38 @@ it('allows partner to create, update and delete their own meal', function (): vo
     $this->assertDatabaseMissing('asl_meals', [
         'id' => $mealId,
     ]);
+});
+
+it('patching meal with partial nutrition payload updates only sent macros and keeps metadata', function (): void {
+    $partner = User::factory()->create();
+    $partner->assignRole('Partner');
+
+    $meal = Meal::factory()->create([
+        'user_id' => $partner->id,
+        'status' => 'draft',
+    ]);
+
+    MealNutrition::query()->create([
+        'meal_id' => $meal->id,
+        'fats' => 10,
+        'protein' => 20,
+        'carbs' => 30,
+        'metadata' => ['fiber' => '5g'],
+    ]);
+
+    Sanctum::actingAs($partner);
+
+    $this->patchJson("/api/my-meals/{$meal->id}", [
+        'nutrition' => ['protein' => 40.5],
+    ])->assertOk()
+        ->assertJsonPath('success', true);
+
+    $meal->refresh();
+    expect($meal->nutrition)->not->toBeNull();
+    expect((string) $meal->nutrition->protein)->toBe('40.50');
+    expect((string) $meal->nutrition->fats)->toBe('10.00');
+    expect((string) $meal->nutrition->carbs)->toBe('30.00');
+    expect($meal->nutrition->metadata)->toBe(['fiber' => '5g']);
 });
 
 it('prevents partner from managing another partners meal', function (): void {

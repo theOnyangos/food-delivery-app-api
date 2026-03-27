@@ -5,6 +5,11 @@ use App\Http\Controllers\Api\AdminAiAgentConversationController;
 use App\Http\Controllers\Api\AdminAiAgentKbController;
 use App\Http\Controllers\Api\AdminBlogCategoryController;
 use App\Http\Controllers\Api\AdminBlogController;
+use App\Http\Controllers\Api\AdminDailyMenuController;
+use App\Http\Controllers\Api\AdminMealCategoryController;
+use App\Http\Controllers\Api\AdminMealController;
+use App\Http\Controllers\Api\AdminMealIngredientController;
+use App\Http\Controllers\Api\AdminMealRecipeController;
 use App\Http\Controllers\Api\AdminNewsletterController;
 use App\Http\Controllers\Api\AdminPermissionController;
 use App\Http\Controllers\Api\AdminReviewCategoryController;
@@ -19,6 +24,7 @@ use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\ChatSettingsController;
 use App\Http\Controllers\Api\ChatSupportAllocationController;
 use App\Http\Controllers\Api\ChatTypingController;
+use App\Http\Controllers\Api\DailyMenuController;
 use App\Http\Controllers\Api\DeliveryAddressController;
 use App\Http\Controllers\Api\DeliveryZoneController;
 use App\Http\Controllers\Api\MealCategoryController;
@@ -156,6 +162,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/meals/{meal}/reviews', [MealReviewController::class, 'store']);
     Route::get('/meals', [MealController::class, 'index']);
     Route::get('/meals/{meal}', [MealController::class, 'show']);
+    Route::get('/daily-menus/effective', [DailyMenuController::class, 'effective']);
     Route::get('/meal-categories', [MealCategoryController::class, 'index']);
     Route::get('/meal-categories/{mealCategory}', [MealCategoryController::class, 'show']);
 
@@ -199,6 +206,34 @@ Route::middleware(['auth:sanctum', 'permission:manage meal categories'])->group(
     Route::put('/meal-categories/{mealCategory}', [MealCategoryController::class, 'update']);
     Route::patch('/meal-categories/{mealCategory}', [MealCategoryController::class, 'update']);
     Route::delete('/meal-categories/{mealCategory}', [MealCategoryController::class, 'destroy']);
+});
+
+Route::middleware(['auth:sanctum', 'role_or_permission:Super Admin|Admin'])->group(function (): void {
+    Route::get('admin/daily-menus/stats/summary', [AdminDailyMenuController::class, 'statsSummary']);
+    Route::get('admin/daily-menus', [AdminDailyMenuController::class, 'index']);
+    Route::post('admin/daily-menus', [AdminDailyMenuController::class, 'store']);
+    Route::get('admin/daily-menus/{daily_menu}', [AdminDailyMenuController::class, 'show']);
+    Route::put('admin/daily-menus/{daily_menu}', [AdminDailyMenuController::class, 'update']);
+    Route::patch('admin/daily-menus/{daily_menu}', [AdminDailyMenuController::class, 'update']);
+    Route::post('admin/daily-menus/{daily_menu}/publish', [AdminDailyMenuController::class, 'publish']);
+    Route::post('admin/daily-menus/{daily_menu}/archive', [AdminDailyMenuController::class, 'archive']);
+    Route::post('admin/daily-menus/{daily_menu}/duplicate', [AdminDailyMenuController::class, 'duplicate']);
+    Route::delete('admin/daily-menus/{daily_menu}', [AdminDailyMenuController::class, 'destroy']);
+
+    Route::get('admin/meal-categories', [AdminMealCategoryController::class, 'index']);
+    Route::get('admin/meal-recipes/export/pdf', [AdminMealRecipeController::class, 'exportPdf']);
+    Route::get('admin/meal-recipes', [AdminMealRecipeController::class, 'index']);
+    Route::get('admin/meal-recipes/{mealRecipe}', [AdminMealRecipeController::class, 'show']);
+    Route::get('admin/meals/export/pdf', [AdminMealController::class, 'exportPdf']);
+    Route::get('admin/meals', [AdminMealController::class, 'index']);
+    Route::get('admin/meal-ingredients/export/pdf', [AdminMealIngredientController::class, 'exportPdf']);
+    Route::get('admin/meal-ingredients/meal-options', [AdminMealIngredientController::class, 'mealOptions']);
+    Route::get('admin/meal-ingredients', [AdminMealIngredientController::class, 'index']);
+    Route::post('admin/meal-ingredients', [AdminMealIngredientController::class, 'store']);
+    Route::get('admin/meal-ingredients/{mealIngredient}', [AdminMealIngredientController::class, 'show']);
+    Route::put('admin/meal-ingredients/{mealIngredient}', [AdminMealIngredientController::class, 'update']);
+    Route::patch('admin/meal-ingredients/{mealIngredient}', [AdminMealIngredientController::class, 'update']);
+    Route::delete('admin/meal-ingredients/{mealIngredient}', [AdminMealIngredientController::class, 'destroy']);
 });
 
 Route::middleware(['auth:sanctum', 'role:Super Admin'])->group(function (): void {

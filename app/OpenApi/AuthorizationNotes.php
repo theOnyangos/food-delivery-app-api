@@ -42,4 +42,6 @@ final class AuthorizationNotes
     public const FORBIDDEN_MANAGE_REVIEWS = 'Forbidden — requires manage reviews permission';
 
     public const FORBIDDEN_MANAGE_CONTENT = 'Forbidden — requires manage content permission or Super Admin or Admin role';
+
+    public const FORBIDDEN_ADMIN_MEAL_INGREDIENTS = 'Forbidden — requires Super Admin or Admin role';
 }

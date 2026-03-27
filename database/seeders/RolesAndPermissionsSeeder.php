@@ -30,6 +30,11 @@ use Illuminate\Database\Seeder;
  * - admin/reviews: manage reviews
  * - GET /blog/categories, /blogs/recent, /blogs, /blogs/{slugOrId}: public (no extra permission)
  * - admin/blog/categories*, admin/blogs*: manage content (Super Admin + Admin; excluded from Partner/Customer)
+ * - GET /admin/meal-ingredients (DataTables): Super Admin or Admin role only (Partner excluded despite manage meals)
+ * - GET /admin/meal-categories (DataTables): Super Admin or Admin role only (same as admin meals)
+ * - admin/daily-menus*: role_or_permission Super Admin|Admin (same as admin meals/recipes DT; Partner excluded)
+ * - GET /daily-menus/effective: auth:sanctum only
+ * - permission manage daily menus: seeded for Super Admin + Admin for future granular gates / UI
  */
 class RolesAndPermissionsSeeder extends Seeder
 {
@@ -63,6 +68,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'manage review topics',
             'manage reviews',
             'manage content',
+            'manage daily menus',
         ];
 
         foreach ($permissions as $permission) {

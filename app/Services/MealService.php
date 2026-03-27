@@ -282,15 +282,30 @@ class MealService
             return;
         }
 
-        $meal->nutrition()->updateOrCreate(
-            ['meal_id' => $meal->id],
+        $allowed = ['fats', 'protein', 'carbs', 'metadata'];
+        $updates = array_intersect_key($nutrition, array_flip($allowed));
+        if ($updates === []) {
+            return;
+        }
+
+        $row = $meal->nutrition;
+        if ($row !== null) {
+            $row->fill($updates);
+            $row->save();
+
+            return;
+        }
+
+        $meal->nutrition()->create(array_merge(
             [
-                'fats' => $nutrition['fats'] ?? null,
-                'protein' => $nutrition['protein'] ?? null,
-                'carbs' => $nutrition['carbs'] ?? null,
-                'metadata' => $nutrition['metadata'] ?? null,
-            ]
-        );
+                'meal_id' => $meal->id,
+                'fats' => null,
+                'protein' => null,
+                'carbs' => null,
+                'metadata' => null,
+            ],
+            $updates
+        ));
     }
 
     /**
@@ -366,7 +381,7 @@ class MealService
 
     private function assertManageableBy(Meal $meal, User $user): void
     {
-        if ($user->hasRole('Super Admin')) {
+        if ($user->hasRole('Super Admin') || $user->hasRole('Admin')) {
             return;
         }
 
@@ -430,9 +445,15 @@ class MealService
             'category',
             'nutrition',
             'allergens',
-            'ingredients',
-            'tutorials',
-            'recipes',
+            'ingredients' => function ($query): void {
+                $query->orderBy('created_at');
+            },
+            'tutorials' => function ($query): void {
+                $query->orderBy('created_at');
+            },
+            'recipes' => function ($query): void {
+                $query->orderByDesc('updated_at');
+            },
             'recipes.steps',
         ];
     }

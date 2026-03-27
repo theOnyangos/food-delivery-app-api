@@ -76,10 +76,7 @@ class MealCatalogueSeeder extends Seeder
                     'title' => $owner->first_name.' '.$category->title.' Meal',
                     'tags' => ['popular', strtolower($category->title)],
                     'thumbnail_image' => 'https://example.com/images/meals/thumbnail.jpg',
-                    'images' => [
-                        'https://example.com/images/meals/gallery-1.jpg',
-                        'https://example.com/images/meals/gallery-2.jpg',
-                    ],
+                    'images' => [],
                 ]);
 
                 $meal->nutrition()->create([

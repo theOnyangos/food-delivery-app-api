@@ -2216,6 +2216,472 @@
                 ]
             }
         },
+        "/api/daily-menus/effective": {
+            "get": {
+                "tags": [
+                    "Daily menus"
+                ],
+                "summary": "Effective daily menu for a date (recycles last published if none for that day)",
+                "description": "Authenticated users. Returns published menu for the given calendar date, or the latest prior published menu with is_recycled=true. Cached via Redis (tagged).",
+                "operationId": "dailyMenusEffective",
+                "parameters": [
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "description": "Defaults to today (app timezone)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Resolved effective menu payload"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Invalid date"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/daily-menus": {
+            "get": {
+                "tags": [
+                    "Daily menus"
+                ],
+                "summary": "Daily menus (Yajra DataTables; Super Admin or Admin only)",
+                "operationId": "adminDailyMenusDataTables",
+                "responses": {
+                    "200": {
+                        "description": "DataTables JSON"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Daily menus"
+                ],
+                "summary": "Create draft daily menu",
+                "operationId": "adminDailyMenusStore",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "menu_date"
+                                ],
+                                "properties": {
+                                    "menu_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "meal_id": {
+                                                    "type": "string",
+                                                    "format": "uuid"
+                                                },
+                                                "sort_order": {
+                                                    "type": "integer",
+                                                    "nullable": true
+                                                },
+                                                "servings_available": {
+                                                    "type": "integer",
+                                                    "example": 20
+                                                },
+                                                "max_per_order": {
+                                                    "type": "integer",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/daily-menus/stats/summary": {
+            "get": {
+                "tags": [
+                    "Daily menus"
+                ],
+                "summary": "Daily menu stats summary (phase-1; cached briefly)",
+                "operationId": "adminDailyMenusStatsSummary",
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "missing_horizon_days",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 14
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stats JSON"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Invalid parameters"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/daily-menus/{daily_menu}": {
+            "get": {
+                "tags": [
+                    "Daily menus"
+                ],
+                "summary": "Get one daily menu with items and creator (cached)",
+                "operationId": "adminDailyMenusShow",
+                "parameters": [
+                    {
+                        "name": "daily_menu",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Menu detail"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Daily menus"
+                ],
+                "summary": "Update daily menu metadata and/or replace items",
+                "operationId": "adminDailyMenusUpdate",
+                "parameters": [
+                    {
+                        "name": "daily_menu",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "menu_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Daily menus"
+                ],
+                "summary": "Delete draft daily menu only",
+                "operationId": "adminDailyMenusDestroy",
+                "parameters": [
+                    {
+                        "name": "daily_menu",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Not a draft"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/daily-menus/{daily_menu}/publish": {
+            "post": {
+                "tags": [
+                    "Daily menus"
+                ],
+                "summary": "Publish daily menu",
+                "operationId": "adminDailyMenusPublish",
+                "parameters": [
+                    {
+                        "name": "daily_menu",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Published"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/daily-menus/{daily_menu}/duplicate": {
+            "post": {
+                "tags": [
+                    "Daily menus"
+                ],
+                "summary": "Duplicate menu as a new draft for another date (copies line items)",
+                "operationId": "adminDailyMenusDuplicate",
+                "parameters": [
+                    {
+                        "name": "daily_menu",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "menu_date"
+                                ],
+                                "properties": {
+                                    "menu_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "notes": {
+                                        "description": "Optional; omit to copy notes from source",
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "New draft created"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation failed (e.g. menu_date already exists)"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/daily-menus/{daily_menu}/archive": {
+            "post": {
+                "tags": [
+                    "Daily menus"
+                ],
+                "summary": "Archive daily menu",
+                "operationId": "adminDailyMenusArchive",
+                "parameters": [
+                    {
+                        "name": "daily_menu",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Archived"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/delivery-addresses": {
             "get": {
                 "tags": [
@@ -3023,6 +3489,36 @@
                                         "type": "string",
                                         "format": "date-time",
                                         "nullable": true
+                                    },
+                                    "nutrition": {
+                                        "description": "Optional per-serving macros; persisted to asl_meal_nutritions (one row per meal).",
+                                        "properties": {
+                                            "fats": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "example": 12.5,
+                                                "nullable": true
+                                            },
+                                            "protein": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "example": 30,
+                                                "nullable": true
+                                            },
+                                            "carbs": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "example": 45,
+                                                "nullable": true
+                                            },
+                                            "metadata": {
+                                                "description": "Arbitrary JSON (optional)",
+                                                "type": "object",
+                                                "nullable": true
+                                            }
+                                        },
+                                        "type": "object",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -3090,8 +3586,8 @@
                 "tags": [
                     "Meals"
                 ],
-                "summary": "Update one manageable meal",
-                "description": "Supports partial nested updates by replacing nested arrays passed in request payload.",
+                "summary": "Update one manageable meal (PUT)",
+                "description": "Partial update. Send `nutrition: null` to remove the nutrition row; omit `nutrition` to leave it unchanged. Nested arrays replace existing lists when provided.",
                 "operationId": "updateMyMeal",
                 "parameters": [
                     {
@@ -3110,9 +3606,21 @@
                         "application/json": {
                             "schema": {
                                 "properties": {
+                                    "category_id": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "nullable": true
+                                    },
                                     "title": {
                                         "type": "string",
                                         "example": "Updated Meal Title"
+                                    },
+                                    "excerpt": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "description": {
+                                        "type": "string"
                                     },
                                     "status": {
                                         "type": "string",
@@ -3133,6 +3641,56 @@
                                         "items": {
                                             "type": "string"
                                         },
+                                        "nullable": true
+                                    },
+                                    "cooking_time": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "servings": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "calories": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "tags": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "nullable": true
+                                    },
+                                    "published_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "nullable": true
+                                    },
+                                    "nutrition": {
+                                        "description": "Omit to keep existing. Send null to delete. Send object to create/update asl_meal_nutritions (only provided keys are updated on an existing row).",
+                                        "properties": {
+                                            "fats": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "nullable": true
+                                            },
+                                            "protein": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "nullable": true
+                                            },
+                                            "carbs": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "nullable": true
+                                            },
+                                            "metadata": {
+                                                "type": "object",
+                                                "nullable": true
+                                            }
+                                        },
+                                        "type": "object",
                                         "nullable": true
                                     }
                                 },
@@ -3187,6 +3745,139 @@
                     },
                     "403": {
                         "description": "Forbidden — requires manage meals permission or Super Admin, Admin, or Partner role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Update one manageable meal (PATCH)",
+                "description": "Same body semantics as PUT; use whichever HTTP method your client prefers.",
+                "operationId": "patchMyMeal",
+                "parameters": [
+                    {
+                        "name": "meal",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "category_id": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "nullable": true
+                                    },
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "excerpt": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "draft",
+                                            "published",
+                                            "archived"
+                                        ]
+                                    },
+                                    "thumbnail_image": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "images": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "nullable": true
+                                    },
+                                    "cooking_time": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "servings": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "calories": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "tags": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "nullable": true
+                                    },
+                                    "published_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "nullable": true
+                                    },
+                                    "nutrition": {
+                                        "properties": {
+                                            "fats": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "nullable": true
+                                            },
+                                            "protein": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "nullable": true
+                                            },
+                                            "carbs": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "nullable": true
+                                            },
+                                            "metadata": {
+                                                "type": "object",
+                                                "nullable": true
+                                            }
+                                        },
+                                        "type": "object",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Meal updated successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage meals permission or Super Admin, Admin, or Partner role"
+                    },
+                    "422": {
+                        "description": "Validation failed"
                     }
                 },
                 "security": [
@@ -3760,6 +4451,99 @@
                     },
                     "403": {
                         "description": "Forbidden — requires manage meal categories permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/meals": {
+            "get": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "All meals (Yajra DataTables; Super Admin or Admin only)",
+                "operationId": "adminMealsDataTables",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "draft",
+                                "published",
+                                "archived"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "DataTables JSON"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires Super Admin or Admin role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/meal-ingredients": {
+            "get": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "All meal ingredients (Yajra DataTables; Super Admin or Admin only)",
+                "operationId": "adminMealIngredientsDataTables",
+                "parameters": [
+                    {
+                        "name": "meal_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "meal_type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "DataTables JSON"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires Super Admin or Admin role"
                     }
                 },
                 "security": [
@@ -5623,6 +6407,10 @@
         {
             "name": "Auth",
             "description": "Auth"
+        },
+        {
+            "name": "Daily menus",
+            "description": "Daily menus"
         },
         {
             "name": "Delivery Addresses",

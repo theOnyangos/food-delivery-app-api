@@ -74,6 +74,18 @@ use OpenApi\Attributes as OA;
                 new OA\Property(property: 'status', type: 'string', enum: ['draft', 'published', 'archived'], example: 'draft'),
                 new OA\Property(property: 'tags', type: 'array', nullable: true, items: new OA\Items(type: 'string')),
                 new OA\Property(property: 'published_at', type: 'string', format: 'date-time', nullable: true),
+                new OA\Property(
+                    property: 'nutrition',
+                    description: 'Optional per-serving macros; persisted to asl_meal_nutritions (one row per meal).',
+                    nullable: true,
+                    properties: [
+                        new OA\Property(property: 'fats', type: 'number', format: 'float', nullable: true, example: 12.5),
+                        new OA\Property(property: 'protein', type: 'number', format: 'float', nullable: true, example: 30),
+                        new OA\Property(property: 'carbs', type: 'number', format: 'float', nullable: true, example: 45),
+                        new OA\Property(property: 'metadata', description: 'Arbitrary JSON (optional)', type: 'object', nullable: true),
+                    ],
+                    type: 'object'
+                ),
             ],
             type: 'object'
         )
@@ -104,8 +116,8 @@ use OpenApi\Attributes as OA;
     path: '/api/my-meals/{meal}',
     operationId: 'updateMyMeal',
     tags: ['Meals'],
-    summary: 'Update one manageable meal',
-    description: 'Supports partial nested updates by replacing nested arrays passed in request payload.',
+    summary: 'Update one manageable meal (PUT)',
+    description: 'Partial update. Send `nutrition: null` to remove the nutrition row; omit `nutrition` to leave it unchanged. Nested arrays replace existing lists when provided.',
     security: [['sanctum' => []]],
     parameters: [
         new OA\Parameter(name: 'meal', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
@@ -114,10 +126,78 @@ use OpenApi\Attributes as OA;
         required: true,
         content: new OA\JsonContent(
             properties: [
+                new OA\Property(property: 'category_id', type: 'string', format: 'uuid', nullable: true),
                 new OA\Property(property: 'title', type: 'string', example: 'Updated Meal Title'),
+                new OA\Property(property: 'excerpt', type: 'string', nullable: true),
+                new OA\Property(property: 'description', type: 'string'),
                 new OA\Property(property: 'status', type: 'string', enum: ['draft', 'published', 'archived'], example: 'published'),
                 new OA\Property(property: 'thumbnail_image', type: 'string', nullable: true, example: 'https://example.com/images/new-thumb.jpg'),
                 new OA\Property(property: 'images', type: 'array', nullable: true, items: new OA\Items(type: 'string')),
+                new OA\Property(property: 'cooking_time', type: 'integer', nullable: true),
+                new OA\Property(property: 'servings', type: 'integer', nullable: true),
+                new OA\Property(property: 'calories', type: 'integer', nullable: true),
+                new OA\Property(property: 'tags', type: 'array', nullable: true, items: new OA\Items(type: 'string')),
+                new OA\Property(property: 'published_at', type: 'string', format: 'date-time', nullable: true),
+                new OA\Property(
+                    property: 'nutrition',
+                    description: 'Omit to keep existing. Send null to delete. Send object to create/update asl_meal_nutritions (only provided keys are updated on an existing row).',
+                    nullable: true,
+                    properties: [
+                        new OA\Property(property: 'fats', type: 'number', format: 'float', nullable: true),
+                        new OA\Property(property: 'protein', type: 'number', format: 'float', nullable: true),
+                        new OA\Property(property: 'carbs', type: 'number', format: 'float', nullable: true),
+                        new OA\Property(property: 'metadata', type: 'object', nullable: true),
+                    ],
+                    type: 'object'
+                ),
+            ],
+            type: 'object'
+        )
+    ),
+    responses: [
+        new OA\Response(response: 200, description: 'Meal updated successfully'),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_MEALS),
+        new OA\Response(response: 422, description: 'Validation failed'),
+    ]
+)]
+#[OA\Patch(
+    path: '/api/my-meals/{meal}',
+    operationId: 'patchMyMeal',
+    tags: ['Meals'],
+    summary: 'Update one manageable meal (PATCH)',
+    description: 'Same body semantics as PUT; use whichever HTTP method your client prefers.',
+    security: [['sanctum' => []]],
+    parameters: [
+        new OA\Parameter(name: 'meal', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
+    ],
+    requestBody: new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'category_id', type: 'string', format: 'uuid', nullable: true),
+                new OA\Property(property: 'title', type: 'string'),
+                new OA\Property(property: 'excerpt', type: 'string', nullable: true),
+                new OA\Property(property: 'description', type: 'string'),
+                new OA\Property(property: 'status', type: 'string', enum: ['draft', 'published', 'archived']),
+                new OA\Property(property: 'thumbnail_image', type: 'string', nullable: true),
+                new OA\Property(property: 'images', type: 'array', nullable: true, items: new OA\Items(type: 'string')),
+                new OA\Property(property: 'cooking_time', type: 'integer', nullable: true),
+                new OA\Property(property: 'servings', type: 'integer', nullable: true),
+                new OA\Property(property: 'calories', type: 'integer', nullable: true),
+                new OA\Property(property: 'tags', type: 'array', nullable: true, items: new OA\Items(type: 'string')),
+                new OA\Property(property: 'published_at', type: 'string', format: 'date-time', nullable: true),
+                new OA\Property(
+                    property: 'nutrition',
+                    nullable: true,
+                    properties: [
+                        new OA\Property(property: 'fats', type: 'number', format: 'float', nullable: true),
+                        new OA\Property(property: 'protein', type: 'number', format: 'float', nullable: true),
+                        new OA\Property(property: 'carbs', type: 'number', format: 'float', nullable: true),
+                        new OA\Property(property: 'metadata', type: 'object', nullable: true),
+                    ],
+                    type: 'object'
+                ),
             ],
             type: 'object'
         )
@@ -401,6 +481,38 @@ use OpenApi\Attributes as OA;
         new OA\Response(response: 200, description: 'Meal category deleted successfully'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
         new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_MEAL_CATEGORIES),
+    ]
+)]
+#[OA\Get(
+    path: '/api/admin/meals',
+    operationId: 'adminMealsDataTables',
+    tags: ['Meals'],
+    summary: 'All meals (Yajra DataTables; Super Admin or Admin only)',
+    security: [['sanctum' => []]],
+    parameters: [
+        new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['draft', 'published', 'archived'])),
+        new OA\Parameter(name: 'category_id', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'uuid')),
+    ],
+    responses: [
+        new OA\Response(response: 200, description: 'DataTables JSON'),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_ADMIN_MEAL_INGREDIENTS),
+    ]
+)]
+#[OA\Get(
+    path: '/api/admin/meal-ingredients',
+    operationId: 'adminMealIngredientsDataTables',
+    tags: ['Meals'],
+    summary: 'All meal ingredients (Yajra DataTables; Super Admin or Admin only)',
+    security: [['sanctum' => []]],
+    parameters: [
+        new OA\Parameter(name: 'meal_id', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'uuid')),
+        new OA\Parameter(name: 'meal_type', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+    ],
+    responses: [
+        new OA\Response(response: 200, description: 'DataTables JSON'),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_ADMIN_MEAL_INGREDIENTS),
     ]
 )]
 class MealCatalogueEndpoints {}

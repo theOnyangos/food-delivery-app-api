@@ -9,6 +9,7 @@ use App\Services\PrivateAssetUploadService;
 use App\Services\PublicImageUploadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
@@ -24,6 +25,10 @@ class UploadController extends Controller
 
     public function image(Request $request): JsonResponse
     {
+        if ($response = $this->assertSuccessfulPhpUpload($request->file('image'), 'image')) {
+            return $response;
+        }
+
         $request->validate([
             'image' => ['required', 'image', 'mimes:jpeg,png,gif,webp', 'max:10240'],
             'width' => ['nullable', 'integer', 'min:1', 'max:6000'],
@@ -31,21 +36,33 @@ class UploadController extends Controller
             'watermark' => ['nullable', 'boolean'],
         ]);
 
-        $result = $this->imageUploadService->upload(
-            owner: $request->user(),
-            file: $request->file('image'),
-            options: [
-                'width' => $request->integer('width') ?: null,
-                'height' => $request->integer('height') ?: null,
-                'watermark' => (bool) $request->boolean('watermark', false),
-            ],
-        );
+        try {
+            $result = $this->imageUploadService->upload(
+                owner: $request->user(),
+                file: $request->file('image'),
+                options: [
+                    'width' => $request->integer('width') ?: null,
+                    'height' => $request->integer('height') ?: null,
+                    'watermark' => (bool) $request->boolean('watermark', false),
+                ],
+            );
+        } catch (\Throwable $e) {
+            report($e);
+
+            return $this->apiError('Could not process this image. Use JPEG, PNG, GIF, or WebP under 10 MB.', 422, [
+                'errors' => ['image' => ['Could not process this image.']],
+            ]);
+        }
 
         return $this->apiSuccess($result, 'Image uploaded successfully.', 201);
     }
 
     public function publicAsset(Request $request): JsonResponse
     {
+        if ($response = $this->assertSuccessfulPhpUpload($request->file('file'), 'file')) {
+            return $response;
+        }
+
         $request->validate([
             'file' => [
                 'required',
@@ -64,21 +81,33 @@ class UploadController extends Controller
             true
         );
 
-        $result = $this->publicImageUploadService->upload(
-            owner: $request->user(),
-            file: $request->file('file'),
-            options: [
-                'width' => $request->integer('width') ?: null,
-                'height' => $request->integer('height') ?: null,
-                'watermark' => $watermark,
-            ],
-        );
+        try {
+            $result = $this->publicImageUploadService->upload(
+                owner: $request->user(),
+                file: $request->file('file'),
+                options: [
+                    'width' => $request->integer('width') ?: null,
+                    'height' => $request->integer('height') ?: null,
+                    'watermark' => $watermark,
+                ],
+            );
+        } catch (\Throwable $e) {
+            report($e);
+
+            return $this->apiError('Could not process this image. Use JPEG, PNG, GIF, or WebP under 10 MB.', 422, [
+                'errors' => ['file' => ['Could not process this image.']],
+            ]);
+        }
 
         return $this->apiSuccess($result, 'Public asset uploaded successfully.', 201);
     }
 
     public function privateAsset(Request $request): JsonResponse
     {
+        if ($response = $this->assertSuccessfulPhpUpload($request->file('file'), 'file')) {
+            return $response;
+        }
+
         $request->validate([
             'file' => ['required', 'file', 'max:20480'],
             'category' => ['nullable', 'string', 'max:64'],
@@ -87,11 +116,19 @@ class UploadController extends Controller
         $category = $request->input('category', 'general');
         $file = $request->file('file');
 
-        $result = $this->privateAssetUploadService->upload(
-            $request->user(),
-            $file,
-            $category
-        );
+        try {
+            $result = $this->privateAssetUploadService->upload(
+                $request->user(),
+                $file,
+                $category
+            );
+        } catch (\Throwable $e) {
+            report($e);
+
+            return $this->apiError('Could not store this file. Check server storage permissions and PHP upload limits.', 422, [
+                'errors' => ['file' => ['Could not store this file.']],
+            ]);
+        }
 
         return $this->apiSuccess([
             'id' => $result['id'],
@@ -211,5 +248,40 @@ class UploadController extends Controller
         if ($media->model_type !== $user::class || (string) $media->model_id !== (string) $user->id) {
             abort(403, 'You do not have access to this file.');
         }
+    }
+
+    /**
+     * Laravel's "image" / "file" rules report a generic "failed to upload" when PHP did not accept the bytes
+     * (e.g. upload_max_filesize, post_max_size, or disk write). Return a specific message first.
+     */
+    private function assertSuccessfulPhpUpload(?UploadedFile $file, string $inputKey): ?JsonResponse
+    {
+        if ($file === null) {
+            return null;
+        }
+
+        if ($file->isValid()) {
+            return null;
+        }
+
+        $msg = $this->phpUploadErrorMessage($file);
+
+        return $this->apiError($msg, 422, [
+            'errors' => [$inputKey => [$msg]],
+        ]);
+    }
+
+    private function phpUploadErrorMessage(UploadedFile $file): string
+    {
+        return match ($file->getError()) {
+            UPLOAD_ERR_INI_SIZE => 'File is larger than PHP upload_max_filesize. Increase upload_max_filesize and post_max_size in php.ini (for example 20M) and restart PHP.',
+            UPLOAD_ERR_FORM_SIZE => 'File is larger than the maximum allowed by the form.',
+            UPLOAD_ERR_PARTIAL => 'The file was only partially uploaded. Please try again.',
+            UPLOAD_ERR_NO_FILE => 'No file was uploaded.',
+            UPLOAD_ERR_NO_TMP_DIR => 'Server is missing a temporary directory for uploads (upload_tmp_dir).',
+            UPLOAD_ERR_CANT_WRITE => 'Could not write the upload to disk. Check permissions on the temp and public directories.',
+            UPLOAD_ERR_EXTENSION => 'A PHP extension blocked this upload.',
+            default => $file->getErrorMessage() ?: 'The file failed to upload.',
+        };
     }
 }
