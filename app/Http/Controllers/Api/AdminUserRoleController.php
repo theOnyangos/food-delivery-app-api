@@ -11,15 +11,6 @@ use Spatie\Permission\PermissionRegistrar;
 
 class AdminUserRoleController extends Controller
 {
-    public function index(Request $request): JsonResponse
-    {
-        $query = User::query()->with('roles')->orderBy('email');
-        $perPage = (int) $request->input('per_page', 15);
-        $perPage = $perPage >= 1 && $perPage <= 100 ? $perPage : 15;
-
-        return $this->apiSuccess($query->paginate($perPage), 'Users fetched successfully.');
-    }
-
     public function updateRoles(Request $request, User $user): JsonResponse
     {
         $validated = $request->validate([

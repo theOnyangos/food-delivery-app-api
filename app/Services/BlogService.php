@@ -30,6 +30,7 @@ class BlogService
         return DataTables::eloquent($query)
             ->addColumn('published_at_formatted', fn (Blog $blog) => $blog->published_at?->format('Y-m-d H:i'))
             ->orderColumn('published_at_formatted', fn ($q, $order) => $q->orderBy('published_at', $order))
+            ->removeColumn('body')
             ->toJson();
     }
 

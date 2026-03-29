@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\DeliveryZone\StoreDeliveryZoneRequest;
 use App\Http\Requests\DeliveryZone\UpdateDeliveryZoneRequest;
 use App\Models\DeliveryZone;
+use App\Services\DeliveryZoneAdminService;
 use App\Services\DeliveryZoneService;
 use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
@@ -15,14 +16,13 @@ class DeliveryZoneController extends Controller
 {
     public function __construct(
         private readonly DeliveryZoneService $deliveryZoneService,
+        private readonly DeliveryZoneAdminService $deliveryZoneAdminService,
         private readonly NotificationService $notificationService,
     ) {}
 
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): mixed
     {
-        $zones = $this->deliveryZoneService->listForAdmin($request->only(['status', 'zip_code']));
-
-        return $this->apiSuccess($zones, 'Delivery zones fetched successfully.');
+        return $this->deliveryZoneAdminService->getDataTables($request);
     }
 
     public function store(StoreDeliveryZoneRequest $request): JsonResponse

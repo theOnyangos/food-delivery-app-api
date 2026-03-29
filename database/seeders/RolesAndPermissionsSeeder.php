@@ -29,7 +29,7 @@ use Illuminate\Database\Seeder;
  * - admin/review-topics: manage review topics
  * - admin/reviews: manage reviews
  * - GET /blog/categories, /blogs/recent, /blogs, /blogs/{slugOrId}: public (no extra permission)
- * - admin/blog/categories*, admin/blogs*: manage content (Super Admin + Admin; excluded from Partner/Customer)
+ * - admin/blog/categories*, admin/blogs*: role_or_permission Super Admin|Admin|manage content (no duplicate permission middleware)
  * - GET /admin/meal-ingredients (DataTables): Super Admin or Admin role only (Partner excluded despite manage meals)
  * - GET /admin/meal-categories (DataTables): Super Admin or Admin role only (same as admin meals)
  * - admin/daily-menus*: role_or_permission Super Admin|Admin (same as admin meals/recipes DT; Partner excluded)

@@ -95,9 +95,14 @@ Route::middleware(['auth:sanctum', 'permission:manage roles'])->group(function (
 
 Route::middleware(['auth:sanctum', 'role_or_permission:Super Admin|manage users'])->group(function (): void {
     Route::get('admin/users/role-options', [AdminUserController::class, 'roleOptions']);
-    Route::get('admin/users', [AdminUserRoleController::class, 'index']);
+    Route::get('admin/users', [AdminUserController::class, 'index']);
     Route::post('admin/users', [AdminUserController::class, 'store']);
+    Route::get('admin/users/{user}', [AdminUserController::class, 'show']);
+    Route::post('admin/users/{user}/block', [AdminUserController::class, 'block']);
+    Route::post('admin/users/{user}/unblock', [AdminUserController::class, 'unblock']);
+    Route::post('admin/users/{user}/reset-password', [AdminUserController::class, 'requestPasswordReset']);
     Route::post('admin/users/{user}/resend-invite', [AdminUserController::class, 'resendInvite']);
+    Route::delete('admin/users/{user}', [AdminUserController::class, 'destroy']);
 });
 
 Route::get('/notifications/stream', [NotificationController::class, 'index']);
@@ -278,7 +283,9 @@ Route::middleware(['auth:sanctum', 'role_or_permission:Super Admin|manage newsle
     Route::delete('/subscribers/{subscriber}', [AdminNewsletterController::class, 'destroy']);
 });
 
-Route::middleware(['auth:sanctum', 'role_or_permission:Super Admin|Admin|manage content', 'permission:manage content'])->group(function (): void {
+// Single gate: Super Admin or Admin role, or explicit manage content permission (avoid duplicate
+// permission middleware failing when role permissions are stale vs role name).
+Route::middleware(['auth:sanctum', 'role_or_permission:Super Admin|Admin|manage content'])->group(function (): void {
     Route::prefix('admin/blog')->group(function (): void {
         Route::get('/categories', [AdminBlogCategoryController::class, 'index']);
         Route::post('/categories', [AdminBlogCategoryController::class, 'store']);

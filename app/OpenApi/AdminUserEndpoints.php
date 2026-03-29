@@ -18,17 +18,43 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\Get(
     path: '/api/admin/users',
-    operationId: 'adminListUsers',
+    operationId: 'adminListUsersDataTables',
     tags: ['Admin Users'],
-    summary: 'Paginated list of users (for admin)',
+    summary: 'List users (Yajra DataTables; requires manage users)',
+    description: 'Accepts standard jQuery DataTables server-side query parameters (draw, start, length, search, columns, order, etc.).',
     security: [['sanctum' => []]],
     parameters: [
-        new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
+        new OA\Parameter(name: 'draw', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+        new OA\Parameter(name: 'start', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+        new OA\Parameter(name: 'length', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+        new OA\Parameter(
+            name: 'role',
+            in: 'query',
+            required: false,
+            description: 'When set to a role name that exists in the database, only users assigned that role are returned (e.g. Customer, Partner).',
+            schema: new OA\Schema(type: 'string', example: 'Customer')
+        ),
     ],
     responses: [
-        new OA\Response(response: 200, description: 'Users fetched successfully'),
+        new OA\Response(response: 200, description: 'DataTables JSON'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
         new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_USERS),
+    ]
+)]
+#[OA\Get(
+    path: '/api/admin/users/{user}',
+    operationId: 'adminShowUser',
+    tags: ['Admin Users'],
+    summary: 'Show one user for admin detail (requires manage users)',
+    security: [['sanctum' => []]],
+    parameters: [
+        new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
+    ],
+    responses: [
+        new OA\Response(response: 200, description: 'User detail'),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_USERS),
+        new OA\Response(response: 404, description: 'Not found'),
     ]
 )]
 #[OA\Post(
@@ -83,6 +109,68 @@ use OpenApi\Attributes as OA;
         new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_USERS),
         new OA\Response(response: 422, description: 'Account already verified'),
         new OA\Response(response: 429, description: 'Too many requests'),
+    ]
+)]
+#[OA\Post(
+    path: '/api/admin/users/{user}/block',
+    operationId: 'adminBlockUser',
+    tags: ['Admin Users'],
+    summary: 'Block user account (revokes tokens; requires manage users)',
+    security: [['sanctum' => []]],
+    parameters: [
+        new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
+    ],
+    responses: [
+        new OA\Response(response: 200, description: 'User blocked'),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_USERS),
+        new OA\Response(response: 422, description: 'Validation or business rule'),
+    ]
+)]
+#[OA\Post(
+    path: '/api/admin/users/{user}/unblock',
+    operationId: 'adminUnblockUser',
+    tags: ['Admin Users'],
+    summary: 'Unblock user account',
+    security: [['sanctum' => []]],
+    parameters: [
+        new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
+    ],
+    responses: [
+        new OA\Response(response: 200, description: 'User unblocked'),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_USERS),
+    ]
+)]
+#[OA\Post(
+    path: '/api/admin/users/{user}/reset-password',
+    operationId: 'adminRequestUserPasswordReset',
+    tags: ['Admin Users'],
+    summary: 'Queue password reset email for the user',
+    security: [['sanctum' => []]],
+    parameters: [
+        new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
+    ],
+    responses: [
+        new OA\Response(response: 200, description: 'Reset email queued'),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_USERS),
+    ]
+)]
+#[OA\Delete(
+    path: '/api/admin/users/{user}',
+    operationId: 'adminDeleteUser',
+    tags: ['Admin Users'],
+    summary: 'Soft-delete user account (requires manage users)',
+    security: [['sanctum' => []]],
+    parameters: [
+        new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
+    ],
+    responses: [
+        new OA\Response(response: 200, description: 'User deleted'),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_USERS),
+        new OA\Response(response: 422, description: 'Cannot delete self or last Super Admin'),
     ]
 )]
 class AdminUserEndpoints {}

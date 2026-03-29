@@ -36,22 +36,48 @@
                 "tags": [
                     "Admin Users"
                 ],
-                "summary": "Paginated list of users (for admin)",
-                "operationId": "adminListUsers",
+                "summary": "List users (Yajra DataTables; requires manage users)",
+                "description": "Accepts standard jQuery DataTables server-side query parameters (draw, start, length, search, columns, order, etc.).",
+                "operationId": "adminListUsersDataTables",
                 "parameters": [
                     {
-                        "name": "per_page",
+                        "name": "draw",
                         "in": "query",
                         "required": false,
                         "schema": {
-                            "type": "integer",
-                            "example": 15
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "start",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "length",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "description": "When set to a role name that exists in the database, only users assigned that role are returned (e.g. Customer, Partner).",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Customer"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Users fetched successfully"
+                        "description": "DataTables JSON"
                     },
                     "401": {
                         "description": "Unauthenticated"
@@ -145,6 +171,82 @@
                 ]
             }
         },
+        "/api/admin/users/{user}": {
+            "get": {
+                "tags": [
+                    "Admin Users"
+                ],
+                "summary": "Show one user for admin detail (requires manage users)",
+                "operationId": "adminShowUser",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User detail"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage users permission or Super Admin role"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Admin Users"
+                ],
+                "summary": "Soft-delete user account (requires manage users)",
+                "operationId": "adminDeleteUser",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User deleted"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage users permission or Super Admin role"
+                    },
+                    "422": {
+                        "description": "Cannot delete self or last Super Admin"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/admin/users/{user}/resend-invite": {
             "post": {
                 "tags": [
@@ -178,6 +280,117 @@
                     },
                     "429": {
                         "description": "Too many requests"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/users/{user}/block": {
+            "post": {
+                "tags": [
+                    "Admin Users"
+                ],
+                "summary": "Block user account (revokes tokens; requires manage users)",
+                "operationId": "adminBlockUser",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User blocked"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage users permission or Super Admin role"
+                    },
+                    "422": {
+                        "description": "Validation or business rule"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/users/{user}/unblock": {
+            "post": {
+                "tags": [
+                    "Admin Users"
+                ],
+                "summary": "Unblock user account",
+                "operationId": "adminUnblockUser",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User unblocked"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage users permission or Super Admin role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/users/{user}/reset-password": {
+            "post": {
+                "tags": [
+                    "Admin Users"
+                ],
+                "summary": "Queue password reset email for the user",
+                "operationId": "adminRequestUserPasswordReset",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reset email queued"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires manage users permission or Super Admin role"
                     }
                 },
                 "security": [
@@ -2974,9 +3187,34 @@
                 "tags": [
                     "Delivery Zones"
                 ],
-                "summary": "List delivery zones (Admin)",
-                "operationId": "listDeliveryZones",
+                "summary": "List delivery zones (Yajra DataTables; requires manage delivery zones)",
+                "description": "Accepts standard jQuery DataTables server-side query parameters. Optional filters: status, zip_code (partial match).",
+                "operationId": "listDeliveryZonesDataTables",
                 "parameters": [
+                    {
+                        "name": "draw",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "start",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "length",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
                     {
                         "name": "status",
                         "in": "query",
@@ -3000,7 +3238,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Delivery zones fetched successfully"
+                        "description": "DataTables JSON"
                     },
                     "401": {
                         "description": "Unauthenticated"

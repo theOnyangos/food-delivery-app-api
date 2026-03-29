@@ -3,9 +3,15 @@
 namespace App\Providers;
 
 use App\Events\PasswordResetLinkRequested;
+use App\Events\UserBlockedByAdmin;
+use App\Events\UserDeletedByAdmin;
+use App\Events\UserUnblockedByAdmin;
 use App\Events\UserEmailVerified;
 use App\Events\UserRegistered;
 use App\Listeners\CreateRegistrationNotification;
+use App\Listeners\QueueUserBlockedNotification;
+use App\Listeners\QueueUserDeletedNotification;
+use App\Listeners\QueueUserUnblockedNotification;
 use App\Listeners\SendPasswordResetLinkListener;
 use App\Listeners\SendVerificationNotification;
 use App\Listeners\SendWelcomeNotification;
@@ -48,6 +54,9 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Event::listen(PasswordResetLinkRequested::class, SendPasswordResetLinkListener::class);
+        Event::listen(UserBlockedByAdmin::class, QueueUserBlockedNotification::class);
+        Event::listen(UserUnblockedByAdmin::class, QueueUserUnblockedNotification::class);
+        Event::listen(UserDeletedByAdmin::class, QueueUserDeletedNotification::class);
         Event::listen(UserRegistered::class, SendVerificationNotification::class);
         Event::listen(UserRegistered::class, CreateRegistrationNotification::class);
         Event::listen(UserEmailVerified::class, SendWelcomeNotification::class);

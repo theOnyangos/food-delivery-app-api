@@ -76,6 +76,13 @@ class AuthService
             return null;
         }
 
+        if ($user->blocked_at !== null) {
+            return [
+                'blocked' => true,
+                'reason' => 'account_blocked',
+            ];
+        }
+
         if ($user->email_verified_at === null) {
             return [
                 'blocked' => true,
@@ -145,6 +152,15 @@ class AuthService
             return [
                 'blocked' => true,
                 'reason' => 'two_factor_not_enabled',
+            ];
+        }
+
+        if ($user->blocked_at !== null) {
+            Cache::forget($this->loginOtpCacheKey($payload['otp_challenge_token']));
+
+            return [
+                'blocked' => true,
+                'reason' => 'account_blocked',
             ];
         }
 

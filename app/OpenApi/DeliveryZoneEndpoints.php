@@ -6,16 +6,20 @@ use OpenApi\Attributes as OA;
 
 #[OA\Get(
     path: '/api/admin/delivery-zones',
-    operationId: 'listDeliveryZones',
+    operationId: 'listDeliveryZonesDataTables',
     tags: ['Delivery Zones'],
-    summary: 'List delivery zones (Admin)',
+    summary: 'List delivery zones (Yajra DataTables; requires manage delivery zones)',
+    description: 'Accepts standard jQuery DataTables server-side query parameters. Optional filters: status, zip_code (partial match).',
     security: [['sanctum' => []]],
     parameters: [
+        new OA\Parameter(name: 'draw', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+        new OA\Parameter(name: 'start', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+        new OA\Parameter(name: 'length', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
         new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['active', 'inactive'])),
         new OA\Parameter(name: 'zip_code', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
     ],
     responses: [
-        new OA\Response(response: 200, description: 'Delivery zones fetched successfully'),
+        new OA\Response(response: 200, description: 'DataTables JSON'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
         new OA\Response(response: 403, description: AuthorizationNotes::FORBIDDEN_MANAGE_DELIVERY_ZONES),
     ]

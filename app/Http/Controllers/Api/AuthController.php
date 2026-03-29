@@ -53,6 +53,7 @@ class AuthController extends Controller
         if (isset($result['blocked']) && $result['blocked']) {
             $message = match ($result['reason']) {
                 'email_not_verified' => 'Please verify your email address.',
+                'account_blocked' => 'Your account has been suspended. Contact support if you need help.',
                 default => 'Access denied.',
             };
 
@@ -112,6 +113,7 @@ class AuthController extends Controller
                 'otp_challenge_expired' => 'OTP challenge has expired. Please login again.',
                 'otp_challenge_invalid' => 'Invalid OTP challenge. Please login again.',
                 'two_factor_not_enabled' => 'Two-factor authentication is not enabled for this user.',
+                'account_blocked' => 'Your account has been suspended. Contact support if you need help.',
                 default => 'OTP verification failed.',
             };
 
