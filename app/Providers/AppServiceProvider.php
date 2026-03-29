@@ -3,12 +3,14 @@
 namespace App\Providers;
 
 use App\Events\PasswordResetLinkRequested;
+use App\Events\PosSaleCompleted;
 use App\Events\UserBlockedByAdmin;
 use App\Events\UserDeletedByAdmin;
-use App\Events\UserUnblockedByAdmin;
 use App\Events\UserEmailVerified;
 use App\Events\UserRegistered;
+use App\Events\UserUnblockedByAdmin;
 use App\Listeners\CreateRegistrationNotification;
+use App\Listeners\QueuePosReceiptEmail;
 use App\Listeners\QueueUserBlockedNotification;
 use App\Listeners\QueueUserDeletedNotification;
 use App\Listeners\QueueUserUnblockedNotification;
@@ -60,6 +62,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(UserRegistered::class, SendVerificationNotification::class);
         Event::listen(UserRegistered::class, CreateRegistrationNotification::class);
         Event::listen(UserEmailVerified::class, SendWelcomeNotification::class);
+        Event::listen(PosSaleCompleted::class, QueuePosReceiptEmail::class);
 
         Route::bind('blog', function (string $value): Blog {
             return Blog::query()

@@ -35,6 +35,8 @@ class UpdateDailyMenuRequest extends FormRequest
             'items.*.sort_order' => ['nullable', 'integer', 'min:0'],
             'items.*.servings_available' => ['required_with:items.*.meal_id', 'integer', 'min:1'],
             'items.*.max_per_order' => ['nullable', 'integer', 'min:1'],
+            'items.*.price' => ['nullable', 'numeric', 'min:0'],
+            'items.*.discount_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ];
     }
 }

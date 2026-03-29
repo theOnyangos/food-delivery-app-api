@@ -9,7 +9,7 @@ use OpenApi\Attributes as OA;
     operationId: 'dailyMenusEffective',
     tags: ['Daily menus'],
     summary: 'Effective daily menu for a date (recycles last published if none for that day)',
-    description: 'Authenticated users. Returns published menu for the given calendar date, or the latest prior published menu with is_recycled=true. Cached via Redis (tagged).',
+    description: 'Authenticated users. Returns published menu for the given calendar date, or the latest prior published menu with is_recycled=true. Cached via Redis (tagged). Each item includes optional price, discount_percent (0–100), and computed effective_price (amount per serving after discount).',
     security: [['sanctum' => []]],
     parameters: [
         new OA\Parameter(name: 'date', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date'), description: 'Defaults to today (app timezone)'),
@@ -88,6 +88,8 @@ use OpenApi\Attributes as OA;
                             new OA\Property(property: 'sort_order', type: 'integer', nullable: true),
                             new OA\Property(property: 'servings_available', type: 'integer', example: 20),
                             new OA\Property(property: 'max_per_order', type: 'integer', nullable: true),
+                            new OA\Property(property: 'price', type: 'number', format: 'float', nullable: true, description: 'List price per serving'),
+                            new OA\Property(property: 'discount_percent', type: 'number', format: 'float', nullable: true, description: '0–100; ignored if price is omitted'),
                         ],
                         type: 'object'
                     )
@@ -117,7 +119,21 @@ use OpenApi\Attributes as OA;
             properties: [
                 new OA\Property(property: 'menu_date', type: 'string', format: 'date'),
                 new OA\Property(property: 'notes', type: 'string', nullable: true),
-                new OA\Property(property: 'items', type: 'array', items: new OA\Items(type: 'object')),
+                new OA\Property(
+                    property: 'items',
+                    type: 'array',
+                    items: new OA\Items(
+                        properties: [
+                            new OA\Property(property: 'meal_id', type: 'string', format: 'uuid'),
+                            new OA\Property(property: 'sort_order', type: 'integer', nullable: true),
+                            new OA\Property(property: 'servings_available', type: 'integer', example: 20),
+                            new OA\Property(property: 'max_per_order', type: 'integer', nullable: true),
+                            new OA\Property(property: 'price', type: 'number', format: 'float', nullable: true),
+                            new OA\Property(property: 'discount_percent', type: 'number', format: 'float', nullable: true),
+                        ],
+                        type: 'object'
+                    )
+                ),
             ],
             type: 'object'
         )

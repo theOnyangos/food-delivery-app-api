@@ -30,7 +30,14 @@ it('returns direct published menu for the requested date without recycle flag', 
         'menu_date' => '2030-06-15',
         'notes' => 'Summer',
         'items' => [
-            ['meal_id' => $meal->id, 'sort_order' => 0, 'servings_available' => 12, 'max_per_order' => 2],
+            [
+                'meal_id' => $meal->id,
+                'sort_order' => 0,
+                'servings_available' => 12,
+                'max_per_order' => 2,
+                'price' => 10,
+                'discount_percent' => 20,
+            ],
         ],
     ]);
     $created->assertCreated();
@@ -52,6 +59,10 @@ it('returns direct published menu for the requested date without recycle flag', 
         ->assertJsonPath('data.items.0.meal_title', 'Soup')
         ->assertJsonPath('data.items.0.servings_available', 12)
         ->assertJsonPath('data.items.0.max_per_order', 2);
+
+    expect((float) $response->json('data.items.0.price'))->toBe(10.0);
+    expect((float) $response->json('data.items.0.discount_percent'))->toBe(20.0);
+    expect((float) $response->json('data.items.0.effective_price'))->toBe(8.0);
 });
 
 it('recycles latest prior published menu when none exists for the date', function (): void {
@@ -258,7 +269,13 @@ it('duplicates a menu as a new draft with copied items', function (): void {
     $created = $this->postJson('/api/admin/daily-menus', [
         'menu_date' => '2035-04-01',
         'notes' => 'Source notes',
-        'items' => [['meal_id' => $meal->id, 'servings_available' => 7, 'max_per_order' => 2]],
+        'items' => [[
+            'meal_id' => $meal->id,
+            'servings_available' => 7,
+            'max_per_order' => 2,
+            'price' => 15.5,
+            'discount_percent' => 10,
+        ]],
     ]);
     $created->assertCreated();
     $sourceId = $created->json('data.menu.id');
@@ -275,6 +292,8 @@ it('duplicates a menu as a new draft with copied items', function (): void {
 
     expect($dup->json('data.items.0.servings_available'))->toBe(7);
     expect($dup->json('data.items.0.max_per_order'))->toBe(2);
+    expect((float) $dup->json('data.items.0.price'))->toBe(15.5);
+    expect((float) $dup->json('data.items.0.discount_percent'))->toBe(10.0);
 
     expect(DailyMenu::query()->count())->toBe(2);
 });

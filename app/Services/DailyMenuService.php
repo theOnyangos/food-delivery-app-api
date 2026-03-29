@@ -16,6 +16,24 @@ class DailyMenuService
         private readonly DailyMenuCacheService $dailyMenuCache
     ) {}
 
+    /**
+     * Final amount per serving after optional percentage discount.
+     */
+    public static function effectiveUnitPrice(float|string|null $price, float|string|null $discountPercent): ?float
+    {
+        if ($price === null || $price === '') {
+            return null;
+        }
+        $p = is_numeric($price) ? (float) $price : (float) (string) $price;
+        if ($p < 0 || ! is_finite($p)) {
+            return null;
+        }
+        $d = $discountPercent === null || $discountPercent === '' ? 0.0 : (float) (string) $discountPercent;
+        $d = max(0.0, min(100.0, $d));
+
+        return round($p * (1 - $d / 100), 2);
+    }
+
     public function invalidateCache(): void
     {
         $this->dailyMenuCache->invalidate();
@@ -105,6 +123,9 @@ class DailyMenuService
             $meal = $row->meal;
             $nutrition = $meal?->nutrition;
 
+            $price = $row->price;
+            $discountPercent = $row->discount_percent;
+
             return [
                 'id' => $row->id,
                 'meal_id' => $row->meal_id,
@@ -120,6 +141,9 @@ class DailyMenuService
                 'sort_order' => $row->sort_order,
                 'servings_available' => $row->servings_available,
                 'max_per_order' => $row->max_per_order,
+                'price' => $price === null ? null : round((float) (string) $price, 2),
+                'discount_percent' => $discountPercent === null ? null : round((float) (string) $discountPercent, 2),
+                'effective_price' => self::effectiveUnitPrice($price, $discountPercent),
             ];
         })->values()->all();
     }
@@ -171,19 +195,27 @@ class DailyMenuService
     }
 
     /**
-     * @param  list<array{meal_id: string, sort_order?: int, servings_available: int, max_per_order?: int|null}>  $items
+     * @param  list<array{meal_id: string, sort_order?: int, servings_available: int, max_per_order?: int|null, price?: float|string|null, discount_percent?: float|string|null}>  $items
      */
     private function syncItems(DailyMenu $menu, array $items): void
     {
         $menu->items()->delete();
 
         foreach ($items as $index => $row) {
+            $price = array_key_exists('price', $row) ? $row['price'] : null;
+            $discount = array_key_exists('discount_percent', $row) ? $row['discount_percent'] : null;
+            if ($price === null || $price === '') {
+                $discount = null;
+            }
+
             DailyMenuItem::query()->create([
                 'daily_menu_id' => $menu->id,
                 'meal_id' => $row['meal_id'],
                 'sort_order' => $row['sort_order'] ?? $index,
                 'servings_available' => $row['servings_available'],
                 'max_per_order' => $row['max_per_order'] ?? null,
+                'price' => $price === '' ? null : $price,
+                'discount_percent' => $discount === '' ? null : $discount,
             ]);
         }
     }
@@ -230,6 +262,8 @@ class DailyMenuService
             'sort_order' => $row->sort_order,
             'servings_available' => $row->servings_available,
             'max_per_order' => $row->max_per_order,
+            'price' => $row->price,
+            'discount_percent' => $row->discount_percent,
         ])->values()->all();
 
         $notes = array_key_exists('notes', $data)

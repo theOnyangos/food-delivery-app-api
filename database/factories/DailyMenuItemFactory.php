@@ -25,6 +25,8 @@ class DailyMenuItemFactory extends Factory
             'sort_order' => 0,
             'servings_available' => fake()->numberBetween(5, 100),
             'max_per_order' => fake()->optional()->numberBetween(1, 5),
+            'price' => fake()->optional(0.85)->randomFloat(2, 4, 25),
+            'discount_percent' => fake()->optional(0.7)->randomFloat(2, 0, 25),
         ];
     }
 }

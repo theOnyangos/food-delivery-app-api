@@ -33,6 +33,8 @@ use App\Http\Controllers\Api\MealReviewController;
 use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PartnerMealReviewController;
+use App\Http\Controllers\Api\PosAnalyticsController;
+use App\Http\Controllers\Api\PosController;
 use App\Http\Controllers\Api\PublicBlogController;
 use App\Http\Controllers\Api\UploadController;
 use App\Http\Controllers\Api\UserReviewController;
@@ -224,6 +226,17 @@ Route::middleware(['auth:sanctum', 'role_or_permission:Super Admin|Admin'])->gro
     Route::post('admin/daily-menus/{daily_menu}/archive', [AdminDailyMenuController::class, 'archive']);
     Route::post('admin/daily-menus/{daily_menu}/duplicate', [AdminDailyMenuController::class, 'duplicate']);
     Route::delete('admin/daily-menus/{daily_menu}', [AdminDailyMenuController::class, 'destroy']);
+
+    Route::get('admin/pos/daily-menu/today', [PosController::class, 'todayDailyMenu']);
+    Route::get('admin/pos/daily-menus/published', [PosController::class, 'publishedMenusForPos']);
+    Route::get('admin/pos/analytics/summary', [PosAnalyticsController::class, 'summary']);
+    Route::get('admin/pos/analytics/by-menu', [PosAnalyticsController::class, 'byMenu']);
+    Route::get('admin/pos/analytics/by-salesperson', [PosAnalyticsController::class, 'bySalesperson']);
+    Route::get('admin/pos/analytics/meals', [PosAnalyticsController::class, 'meals']);
+    Route::post('admin/pos/sales', [PosController::class, 'storeSale']);
+    Route::get('admin/pos/sales/datatables', [PosController::class, 'salesDataTables']);
+    Route::get('admin/pos/sales/{posSale}', [PosController::class, 'showSale']);
+    Route::delete('admin/pos/sales/{posSale}', [PosController::class, 'destroySale']);
 
     Route::get('admin/meal-categories', [AdminMealCategoryController::class, 'index']);
     Route::get('admin/meal-recipes/export/pdf', [AdminMealRecipeController::class, 'exportPdf']);

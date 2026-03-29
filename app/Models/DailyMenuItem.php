@@ -23,6 +23,8 @@ class DailyMenuItem extends Model
         'sort_order',
         'servings_available',
         'max_per_order',
+        'price',
+        'discount_percent',
     ];
 
     /**
@@ -34,6 +36,8 @@ class DailyMenuItem extends Model
             'sort_order' => 'integer',
             'servings_available' => 'integer',
             'max_per_order' => 'integer',
+            'price' => 'decimal:2',
+            'discount_percent' => 'decimal:2',
         ];
     }
 
