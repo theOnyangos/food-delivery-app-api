@@ -3567,6 +3567,658 @@
                 ]
             }
         },
+        "/api/admin/inventory/summary": {
+            "get": {
+                "tags": [
+                    "Inventory"
+                ],
+                "summary": "Inventory KPI summary (counts)",
+                "operationId": "adminInventorySummary",
+                "responses": {
+                    "200": {
+                        "description": "Summary counts"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/inventory/items/datatables": {
+            "get": {
+                "tags": [
+                    "Inventory"
+                ],
+                "summary": "Inventory items (Yajra DataTables)",
+                "operationId": "adminInventoryItemsDataTables",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "good",
+                                "low_stock",
+                                "out_of_stock",
+                                "expired"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "location",
+                        "in": "query",
+                        "description": "Partial match on storage_location",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "draw",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "start",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "length",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search[value]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "DataTables JSON"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/inventory/items/options": {
+            "get": {
+                "tags": [
+                    "Inventory"
+                ],
+                "summary": "Lightweight item list for dropdowns (shift usage, etc.)",
+                "operationId": "adminInventoryItemOptions",
+                "responses": {
+                    "200": {
+                        "description": "List of { id, sku, name, quantity, unit }"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/inventory/items": {
+            "post": {
+                "tags": [
+                    "Inventory"
+                ],
+                "summary": "Create inventory item",
+                "operationId": "adminInventoryItemStore",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "quantity",
+                                    "unit"
+                                ],
+                                "properties": {
+                                    "sku": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "image_url": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "quantity": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "unit": {
+                                        "type": "string",
+                                        "enum": [
+                                            "g",
+                                            "kg",
+                                            "L",
+                                            "ml",
+                                            "pcs"
+                                        ]
+                                    },
+                                    "storage_location": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "storage_temperature_celsius": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "nullable": true
+                                    },
+                                    "expiration_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "nullable": true
+                                    },
+                                    "low_stock_threshold": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/inventory/items/{inventoryItem}": {
+            "get": {
+                "tags": [
+                    "Inventory"
+                ],
+                "summary": "Get inventory item",
+                "operationId": "adminInventoryItemShow",
+                "parameters": [
+                    {
+                        "name": "inventoryItem",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Item detail"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Inventory"
+                ],
+                "summary": "Update inventory item",
+                "operationId": "adminInventoryItemUpdate",
+                "parameters": [
+                    {
+                        "name": "inventoryItem",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "sku": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "image_url": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "quantity": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "unit": {
+                                        "type": "string"
+                                    },
+                                    "storage_location": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "storage_temperature_celsius": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "nullable": true
+                                    },
+                                    "expiration_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "nullable": true
+                                    },
+                                    "low_stock_threshold": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Inventory"
+                ],
+                "summary": "Delete inventory item",
+                "operationId": "adminInventoryItemDestroy",
+                "parameters": [
+                    {
+                        "name": "inventoryItem",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/inventory/items/{inventoryItem}/movements": {
+            "get": {
+                "tags": [
+                    "Inventory"
+                ],
+                "summary": "Movement history for an item",
+                "operationId": "adminInventoryItemMovements",
+                "parameters": [
+                    {
+                        "name": "inventoryItem",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Movement rows"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/inventory/items/{inventoryItem}/analytics": {
+            "get": {
+                "tags": [
+                    "Inventory"
+                ],
+                "summary": "Aggregated analytics for one item (daily usage, by user, movement volume by type)",
+                "operationId": "adminInventoryItemAnalytics",
+                "parameters": [
+                    {
+                        "name": "inventoryItem",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "YYYY-MM-DD start (inclusive)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "YYYY-MM-DD end (inclusive), max 366 days span",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Analytics payload: item, range, summary, daily_usage, cumulative_usage, usage_by_user, movement_volume_by_type"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/inventory/usage": {
+            "post": {
+                "tags": [
+                    "Inventory"
+                ],
+                "summary": "Record shift-close usage (decrements stock, ledger entries)",
+                "operationId": "adminInventoryRecordUsage",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "lines"
+                                ],
+                                "properties": {
+                                    "occurred_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "nullable": true
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "lines": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "inventory_item_id": {
+                                                    "type": "string",
+                                                    "format": "uuid",
+                                                    "nullable": true
+                                                },
+                                                "sku": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "quantity_used": {
+                                                    "type": "number",
+                                                    "format": "float"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Usage correlation id and item ids"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/inventory/export.csv": {
+            "get": {
+                "tags": [
+                    "Inventory"
+                ],
+                "summary": "Download current inventory as CSV",
+                "operationId": "adminInventoryExportCsv",
+                "responses": {
+                    "200": {
+                        "description": "CSV file"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/inventory/template.csv": {
+            "get": {
+                "tags": [
+                    "Inventory"
+                ],
+                "summary": "Download CSV import template",
+                "operationId": "adminInventoryTemplateCsv",
+                "responses": {
+                    "200": {
+                        "description": "CSV file"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/inventory/import": {
+            "post": {
+                "tags": [
+                    "Inventory"
+                ],
+                "summary": "Import inventory CSV (multipart file)",
+                "operationId": "adminInventoryImportCsv",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "file"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Import summary { imported, updated, errors, batch_id }"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/meals": {
             "get": {
                 "tags": [
@@ -7197,6 +7849,10 @@
         {
             "name": "Delivery Zones",
             "description": "Delivery Zones"
+        },
+        {
+            "name": "Inventory",
+            "description": "Inventory"
         },
         {
             "name": "Meals",

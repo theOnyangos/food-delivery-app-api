@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\ChatTypingController;
 use App\Http\Controllers\Api\DailyMenuController;
 use App\Http\Controllers\Api\DeliveryAddressController;
 use App\Http\Controllers\Api\DeliveryZoneController;
+use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\MealCategoryController;
 use App\Http\Controllers\Api\MealController;
 use App\Http\Controllers\Api\MealReviewController;
@@ -252,6 +253,23 @@ Route::middleware(['auth:sanctum', 'role_or_permission:Super Admin|Admin'])->gro
     Route::put('admin/meal-ingredients/{mealIngredient}', [AdminMealIngredientController::class, 'update']);
     Route::patch('admin/meal-ingredients/{mealIngredient}', [AdminMealIngredientController::class, 'update']);
     Route::delete('admin/meal-ingredients/{mealIngredient}', [AdminMealIngredientController::class, 'destroy']);
+
+    Route::prefix('admin/inventory')->group(function (): void {
+        Route::get('summary', [InventoryController::class, 'summary']);
+        Route::get('template.csv', [InventoryController::class, 'templateCsv']);
+        Route::get('export.csv', [InventoryController::class, 'exportCsv']);
+        Route::post('import', [InventoryController::class, 'import']);
+        Route::post('usage', [InventoryController::class, 'recordUsage']);
+        Route::get('items/datatables', [InventoryController::class, 'itemsDataTables']);
+        Route::get('items/options', [InventoryController::class, 'itemOptions']);
+        Route::post('items', [InventoryController::class, 'store']);
+        Route::get('items/{inventoryItem}', [InventoryController::class, 'show']);
+        Route::put('items/{inventoryItem}', [InventoryController::class, 'update']);
+        Route::patch('items/{inventoryItem}', [InventoryController::class, 'update']);
+        Route::delete('items/{inventoryItem}', [InventoryController::class, 'destroy']);
+        Route::get('items/{inventoryItem}/movements', [InventoryController::class, 'movements']);
+        Route::get('items/{inventoryItem}/analytics', [InventoryController::class, 'analytics']);
+    });
 });
 
 Route::middleware(['auth:sanctum', 'role:Super Admin'])->group(function (): void {
